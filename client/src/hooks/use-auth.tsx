@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { useNavigate } from "wouter";
+import { useLocation } from "wouter";
 import { apiClient } from "../services/api";
 
 interface User {
@@ -41,7 +41,7 @@ const USER_STORAGE_KEY = "marketing_kpi_user";
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [, setLocation] = useNavigate();
+  const [, setLocation] = useLocation();
 
   // Initialize auth state from localStorage
   useEffect(() => {
@@ -213,7 +213,7 @@ export function useAuth(): AuthContextType {
 export function withAuth<P extends object>(WrappedComponent: React.ComponentType<P>) {
   return function AuthenticatedComponent(props: P) {
     const { isAuthenticated, isLoading } = useAuth();
-    const [, setLocation] = useNavigate();
+    const [, setLocation] = useLocation();
 
     useEffect(() => {
       if (!isLoading && !isAuthenticated) {
@@ -240,7 +240,7 @@ export function withAuth<P extends object>(WrappedComponent: React.ComponentType
 // Hook for admin-only access
 export function useRequireAdmin() {
   const { user, isAuthenticated } = useAuth();
-  const [, setLocation] = useNavigate();
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
     if (isAuthenticated && user?.role !== 'ADMIN') {

@@ -19,7 +19,7 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { Link, useLocation } from "wouter";
+import { Link } from "wouter";
 import { 
   BarChart3, 
   Database, 
