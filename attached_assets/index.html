@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Marketing KPI Scorecard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'cvj-aware': '#64748b',     // slate-500
+            'cvj-engage': '#0ea5e9',    // sky-500
+            'cvj-subscribe': '#6366f1', // indigo-500
+            'cvj-convert': '#a855f7',   // purple-500
+            'cvj-excite': '#ec4899',    // pink-500
+            'cvj-ascend': '#f43f5e',    // rose-500
+            'cvj-advocate': '#10b981',  // emerald-500
+            'cvj-promote': '#14b8a6',   // teal-500
+
+            'status-green': '#dcfce7',        // bg-green-100 for backgrounds
+            'status-green-text': '#15803d',   // text-green-700 (also for SVG fill)
+            'status-yellow': '#fef9c3',       // bg-yellow-100
+            'status-yellow-text': '#a16207',  // text-yellow-700
+            'status-red': '#fee2e2',          // bg-red-100
+            'status-red-text': '#b91c1c',     // text-red-700
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom scrollbar for better aesthetics in modal/overflowing content */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9; /* slate-100 */
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #94a3b8; /* slate-400 */
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #64748b; /* slate-500 */
+    }
+  </style>
+<script type="importmap">
+{
+  "imports": {
+    "@/": "./",
+    "react": "https://esm.sh/react@^19.1.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
+    "react/": "https://esm.sh/react@^19.1.0/",
+    "recharts": "https://esm.sh/recharts@^2.15.3",
+    "react-router-dom": "https://esm.sh/react-router-dom@^7.6.1"
+  }
+}
+</script>
+</head>
+<body class="bg-slate-100">
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html><link rel="stylesheet" href="index.css">
+<script src="index.tsx" type="module"></script>

@@ -1,0 +1,6 @@
+{
+  "name": "Marketing KPI Scorecard",
+  "description": "A web application to track and manage Marketing KPIs across the Customer Value Journey (CVJ) stages, allowing for weekly data entry, dashboard visualization, and KPI administration.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}

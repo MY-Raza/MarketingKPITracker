@@ -1,0 +1,71 @@
+Here's a breakdown of the core files and their roles:
+index.html
+Purpose: This is the main entry point of your web application. It's the first file loaded by the browser.
+Key Features:
+Sets up the basic HTML document structure (<head>, <body>).
+Includes Tailwind CSS via a CDN link and its JavaScript configuration block.
+Contains a <style> block for custom global styles (like the scrollbar).
+Uses an importmap to define aliases for JavaScript module imports (e.g., "react", "recharts"). This allows you to use bare module specifiers in your .tsx files without a separate build step for module resolution in this specific setup.
+Defines a <div> with the ID root. This is where the React application will be mounted.
+Loads the main TypeScript module index.tsx using <script type="module">.
+index.tsx
+Purpose: This is the primary JavaScript/TypeScript entry point for the React application.
+Key Features:
+Imports React, ReactDOM, and the main App component.
+Gets a reference to the root div from index.html.
+Uses ReactDOM.createRoot() to create a React root and then calls root.render() to render the <App /> component (wrapped in <React.StrictMode>) into the DOM.
+App.tsx
+Purpose: This is the heart of your application. It's the top-level React component that orchestrates the entire UI and application logic.
+Key Features:
+State Management: Manages the application's global state using useState and useMemo. This includes:
+cvjStages: The structure of Customer Value Journey stages, sub-categories, and KPIs.
+weeks: The list of defined weeks for data entry.
+weeklyData: Actual values entered for KPIs on a weekly basis.
+monthlyTargets: Specific target values set for KPIs for particular months.
+selectedMonthId, selectedWeekForEntryId: User selections for filtering and data entry.
+Modal visibility states (e.g., isKpiModalOpen).
+Routing: Implements client-side routing using react-router-dom (HashRouter, Routes, Route, NavLink). This allows navigation between different "pages" or views (Dashboard, Data Entry, Admin sections) without full page reloads.
+Layout: Defines the main application layout, including a sidebar for navigation and a header (which includes the month selector).
+Core Logic & Data Processing:
+Contains functions to process data for display (e.g., processKpiDataForMonthDisplay).
+Handles CRUD (Create, Read, Update, Delete) operations for KPIs, weekly data, monthly targets, and weeks. Currently, these operations manipulate the local React state.
+Component Composition: Renders various child components:
+View Components: DashboardView, DataEntryView, AdminKpiView, AdminMonthlyTargetsView, AdminWeeksView (all defined within App.tsx). These are rendered based on the current route.
+Modal Components: KpiModal, MonthlyTargetModal, WeekModal (all defined within App.tsx). These are conditionally rendered based on state.
+Context/Props Drilling: Passes down state and handler functions as props to child components.
+types.ts
+Purpose: Defines all the TypeScript interfaces and enums that describe the shape of your data.
+Key Features:
+Provides strong typing for your application's data structures (e.g., CVJStage, KPI, Week, WeeklyDataEntry, UnitType, form data types).
+Enhances code readability, maintainability, and helps catch errors during development.
+constants.ts
+Purpose: Stores initial data, constant values, and utility functions that are largely static.
+Key Features:
+INITIAL_CVJ_STAGES, DEFAULT_WEEKS, INITIAL_WEEKLY_DATA, INITIAL_MONTHLY_TARGETS: Provide the starting data for the application.
+CVJ_STAGE_COLORS, STATUS_THRESHOLDS: Application-wide constants.
+Helper functions for date manipulation and week calculations (getISOWeek, formatDateToYYYYMMDD, createWeekObjectFromFormData, etc.).
+components/ui.tsx
+Purpose: Contains a collection of reusable, general-purpose UI components.
+Key Features:
+Provides presentational components like Button, Input, Select, Card, Modal, Tooltip, and various icons.
+These components are designed to be versatile and are styled using Tailwind CSS.
+They encapsulate common UI patterns, promoting consistency and reducing code duplication.
+components/charts.tsx
+Purpose: Contains components specifically for rendering charts using the recharts library.
+Key Features:
+KpiTrendChart: Displays line charts for KPI trends.
+KpiStatusGauge: Renders a circular gauge for KPI status.
+KpiComparisonBarChart: Shows bar charts for comparing actual vs. target values.
+These components abstract the recharts implementation details, making it easier to use charts in different parts of the application.
+metadata.json
+Purpose: Provides metadata about the application.
+Key Features:
+Includes the application's name and description.
+requestFramePermissions: Specifies any special permissions the application might need when embedded (currently empty).
+prompt: Could be used for AI interactions or other contextual information (currently empty).
+Overall Flow:
+The browser loads index.html.
+index.html loads index.tsx.
+index.tsx mounts the App component into the <div id="root">.
+App.tsx initializes state (often from constants.ts), sets up routing, and renders the main layout and the view corresponding to the current URL.
+Views and modals within App.tsx use UI components from components/ui.tsx and chart components from components/charts.tsx, all while adhering to the data structures defined in types.ts. User interactions trigger handler functions in App.tsx, which update the state, causing React to re-render the affected parts of the UI.
