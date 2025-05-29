@@ -124,7 +124,7 @@ export default function Login() {
 
             {isRegistering ? (
               <Form {...registerForm}>
-                <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
+                <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4" autoComplete="on">
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={registerForm.control}
@@ -161,16 +161,15 @@ export default function Login() {
                       <FormItem>
                         <FormLabel>Email Address</FormLabel>
                         <FormControl>
-                          <div className="relative">
-                            <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400 pointer-events-none" />
-                            <Input 
-                              className="pl-10" 
-                              placeholder="john@example.com" 
-                              type="email"
-                              autoComplete="email"
-                              {...field} 
-                            />
-                          </div>
+                          <Input 
+                            placeholder="john@example.com" 
+                            type="email"
+                            autoComplete="email"
+                            value={field.value || ""}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
