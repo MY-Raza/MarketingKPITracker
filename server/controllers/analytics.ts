@@ -214,12 +214,18 @@ router.delete(
   authenticateToken,
   validateParams(analyticsValidators.weekParams),
   asyncHandler(async (req: Request, res: Response) => {
+    console.log(`DELETE request received for week ID: "${req.params.id}"`);
     const existingWeek = await storage.getWeekById(req.params.id);
+    console.log(`Found existing week:`, existingWeek);
+    
     if (!existingWeek) {
+      console.log("Week not found, throwing 404 error");
       throw new ApiError("Week not found", 404);
     }
 
+    console.log(`Calling storage.deleteWeek with ID: "${req.params.id}"`);
     await storage.deleteWeek(req.params.id);
+    console.log("Delete operation completed");
     res.json(successResponse(null, "Week deleted successfully"));
   })
 );
