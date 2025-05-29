@@ -37,6 +37,9 @@ class ApiClient {
 
     if (this.tokens?.accessToken) {
       headers.Authorization = `Bearer ${this.tokens.accessToken}`;
+      console.log('API Client: Adding JWT token to headers');
+    } else {
+      console.log('API Client: No JWT token available for request');
     }
 
     return headers;
