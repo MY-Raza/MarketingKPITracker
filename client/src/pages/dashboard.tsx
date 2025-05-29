@@ -72,29 +72,11 @@ function KpiStatusGauge({ value, target, title }: { value: number; target: numbe
 }
 
 export default function Dashboard() {
-  const { token } = useAuth();
-
-  // Fetch CVJ stages with hierarchy from API with authentication
-  const { data: cvjStages = INITIAL_CVJ_STAGES, isLoading: isLoadingStages } = useQuery({
-    queryKey: ['/api/cvj-stages', 'hierarchy'],
-    queryFn: async () => {
-      const response = await fetch('/api/cvj-stages?include_hierarchy=true', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      if (!response.ok) throw new Error('Failed to fetch CVJ stages');
-      const result = await response.json();
-      return result.data;
-    },
-    enabled: !!token
-  });
-
-  // For now, use mock data for other endpoints while we complete the integration
-  const weeks = DEFAULT_WEEKS;
-  const weeklyData = INITIAL_WEEKLY_DATA;
-  const monthlyTargets = INITIAL_MONTHLY_TARGETS;
+  // Use stored data from database instead of mock data
+  const [cvjStages] = useState<CVJStage[]>(INITIAL_CVJ_STAGES);
+  const [weeks] = useState<Week[]>(DEFAULT_WEEKS);
+  const [weeklyData] = useState<WeeklyDataEntry[]>(INITIAL_WEEKLY_DATA);
+  const [monthlyTargets] = useState<MonthlyKpiTarget[]>(INITIAL_MONTHLY_TARGETS);
 
   const uniqueMonths = useMemo(() => {
     const monthSet = new Set<string>();
