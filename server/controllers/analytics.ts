@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { z } from "zod";
-import { storage } from "../storage-temp";
+import { storage } from "../storage-simple";
 import { authenticateToken } from "../middleware/auth";
 import { validateParams, validateQuery, validateRequest } from "../middleware/validation";
 import { asyncHandler } from "../middleware/error";

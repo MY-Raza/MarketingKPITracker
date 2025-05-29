@@ -205,17 +205,15 @@ export class DatabaseStorage implements IStorage {
 
   // KPI operations
   async getKpis(filters?: { stageId?: string; subCategoryId?: string; active?: boolean }): Promise<Kpi[]> {
-    let query = db.select().from(kpis);
-    
     if (filters?.subCategoryId) {
-      query = query.where(eq(kpis.subCategoryId, filters.subCategoryId));
+      return await db.select().from(kpis).where(eq(kpis.subCategoryId, filters.subCategoryId));
     }
     
     if (filters?.active !== undefined) {
-      query = query.where(eq(kpis.isActive, filters.active));
+      return await db.select().from(kpis).where(eq(kpis.isActive, filters.active));
     }
     
-    return await query.orderBy(asc(kpis.name));
+    return await db.select().from(kpis);
   }
 
   async getKpiById(id: string): Promise<Kpi | undefined> {
