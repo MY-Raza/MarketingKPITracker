@@ -59,11 +59,14 @@ export default function Admin() {
   const [isKpiModalOpen, setIsKpiModalOpen] = useState(false);
   const [isMonthlyTargetModalOpen, setIsMonthlyTargetModalOpen] = useState(false);
   const [isWeekModalOpen, setIsWeekModalOpen] = useState(false);
+  const [isSubcategoryModalOpen, setIsSubcategoryModalOpen] = useState(false);
   const [editingKpi, setEditingKpi] = useState<KPI | undefined>();
   const [editingMonthlyTarget, setEditingMonthlyTarget] = useState<MonthlyKpiTarget | undefined>();
   const [editingWeek, setEditingWeek] = useState<Week | undefined>();
+  const [editingSubcategory, setEditingSubcategory] = useState<any>();
   const [defaultSubCategoryName, setDefaultSubCategoryName] = useState<string>('');
   const [defaultCvjStageName, setDefaultCvjStageName] = useState<CVJStageName>(CVJStageName.AWARE);
+  const [selectedStageForSubcategory, setSelectedStageForSubcategory] = useState<string>('');
 
   // Get all KPIs
   const allKpis = cvjStages.flatMap(stage => 
@@ -257,6 +260,29 @@ export default function Admin() {
   const handleDeleteWeek = useCallback((weekId: string) => {
     deleteWeekMutation.mutate(weekId);
   }, [deleteWeekMutation]);
+
+  // Subcategory handlers
+  const openSubcategoryModal = useCallback((subcategory?: any, stageId?: string) => {
+    setEditingSubcategory(subcategory);
+    setSelectedStageForSubcategory(stageId || '');
+    setIsSubcategoryModalOpen(true);
+  }, []);
+
+  const handleSubcategoryFormSubmit = useCallback((formData: any) => {
+    if (editingSubcategory) {
+      // Update existing subcategory
+      console.log('Update subcategory:', formData);
+    } else {
+      // Create new subcategory
+      console.log('Create subcategory:', formData);
+    }
+    setIsSubcategoryModalOpen(false);
+    setEditingSubcategory(undefined);
+  }, [editingSubcategory]);
+
+  const handleDeleteSubcategory = useCallback((subcategoryId: string) => {
+    console.log('Delete subcategory:', subcategoryId);
+  }, []);
 
   const filteredTargets = monthlyTargets.filter(target => target.monthId === selectedMonthId);
 

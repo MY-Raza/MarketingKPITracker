@@ -320,8 +320,7 @@ export async function seedDatabase() {
       const kpiId = kpiMap.get(dataEntry.kpiName);
       if (kpiId) {
         const existing = await db.select().from(weeklyDataEntries)
-          .where(eq(weeklyDataEntries.weekId, dataEntry.weekId))
-          .where(eq(weeklyDataEntries.kpiId, kpiId));
+          .where(eq(weeklyDataEntries.weekId, dataEntry.weekId));
         
         if (existing.length === 0) {
           await db.insert(weeklyDataEntries).values({
