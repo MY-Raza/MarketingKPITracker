@@ -336,7 +336,7 @@ router.get(
 router.get(
   "/subcategories/:id",
   authenticateToken,
-  validateParams(analyticsValidators.subcategoryParams),
+  validateParams(z.object({ id: z.string().uuid() })),
   asyncHandler(async (req: Request, res: Response) => {
     const subcategory = await storage.getSubCategoryById(req.params.id);
     if (!subcategory) {
@@ -350,7 +350,11 @@ router.get(
 router.post(
   "/subcategories",
   authenticateToken,
-  validateRequest(analyticsValidators.createSubcategory),
+  validateRequest(z.object({
+    name: z.string().min(1).max(200),
+    displayOrder: z.number().int().min(1),
+    cvjStageId: z.string().uuid()
+  })),
   asyncHandler(async (req: Request, res: Response) => {
     const subcategory = await storage.createSubCategory(req.body);
     res.status(201).json(successResponse(subcategory, "Subcategory created successfully"));
@@ -361,8 +365,12 @@ router.post(
 router.put(
   "/subcategories/:id",
   authenticateToken,
-  validateParams(analyticsValidators.subcategoryParams),
-  validateRequest(analyticsValidators.updateSubcategory),
+  validateParams(z.object({ id: z.string().uuid() })),
+  validateRequest(z.object({
+    name: z.string().min(1).max(200).optional(),
+    displayOrder: z.number().int().min(1).optional(),
+    cvjStageId: z.string().uuid().optional()
+  })),
   asyncHandler(async (req: Request, res: Response) => {
     const subcategory = await storage.updateSubCategory(req.params.id, req.body);
     res.json(successResponse(subcategory, "Subcategory updated successfully"));
@@ -373,7 +381,7 @@ router.put(
 router.delete(
   "/subcategories/:id",
   authenticateToken,
-  validateParams(analyticsValidators.subcategoryParams),
+  validateParams(z.object({ id: z.string().uuid() })),
   asyncHandler(async (req: Request, res: Response) => {
     await storage.deleteSubCategory(req.params.id);
     res.json(successResponse(null, "Subcategory deleted successfully"));
