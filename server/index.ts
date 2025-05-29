@@ -84,15 +84,28 @@ app.post("/api/monthly-targets", async (req, res) => {
       });
     }
 
-    const newTarget = await storage.createMonthlyTarget({
-      kpiId,
-      monthId,
-      targetValue: numericTargetValue
-    });
+    // Check if target already exists for this KPI and month
+    const existingTargets = await storage.getMonthlyTargets();
+    const existingTarget = existingTargets.find(t => t.kpiId === kpiId && t.monthId === monthId);
     
-    res.status(201).json(newTarget);
+    let result;
+    if (existingTarget) {
+      // Update existing target
+      result = await storage.updateMonthlyTarget(existingTarget.id, {
+        targetValue: numericTargetValue
+      });
+      res.json(result);
+    } else {
+      // Create new target
+      result = await storage.createMonthlyTarget({
+        kpiId,
+        monthId,
+        targetValue: numericTargetValue
+      });
+      res.status(201).json(result);
+    }
   } catch (error) {
-    console.error('Error creating monthly target:', error);
+    console.error('Error creating/updating monthly target:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
@@ -103,6 +116,58 @@ app.get("/api/weekly-data", async (req, res) => {
     res.json(weeklyData);
   } catch (error) {
     console.error('Error:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+app.post("/api/weekly-data", async (req, res) => {
+  try {
+    const { weekId, kpiId, actualValue, notes } = req.body;
+    
+    // Validate required fields
+    if (!weekId || !kpiId) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Missing required fields: weekId, kpiId' 
+      });
+    }
+
+    // Convert actualValue to number if provided, or null
+    let numericActualValue = null;
+    if (actualValue !== undefined && actualValue !== null && actualValue !== '') {
+      numericActualValue = parseFloat(actualValue);
+      if (isNaN(numericActualValue)) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'actualValue must be a valid number or empty' 
+        });
+      }
+    }
+
+    // Check if entry already exists for this week and KPI
+    const existingEntries = await storage.getWeeklyDataEntries();
+    const existingEntry = existingEntries.find(e => e.weekId === weekId && e.kpiId === kpiId);
+    
+    let result;
+    if (existingEntry) {
+      // Update existing entry
+      result = await storage.updateWeeklyDataEntry(existingEntry.id, {
+        actualValue: numericActualValue,
+        notes: notes || null
+      });
+      res.json(result);
+    } else {
+      // Create new entry
+      result = await storage.createWeeklyDataEntry({
+        weekId,
+        kpiId,
+        actualValue: numericActualValue,
+        notes: notes || null
+      });
+      res.status(201).json(result);
+    }
+  } catch (error) {
+    console.error('Error creating/updating weekly data entry:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
