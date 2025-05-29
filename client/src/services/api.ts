@@ -466,7 +466,7 @@ class ApiClient {
   }
 
   async deleteWeek(id: string): Promise<void> {
-    return this.patch(`/api/analytics/weeks/${id}/remove`);
+    return this.get(`/api/analytics/weeks/${id}/delete`);
   }
 }
 

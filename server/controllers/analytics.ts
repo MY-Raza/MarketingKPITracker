@@ -180,6 +180,33 @@ router.get(
   })
 );
 
+// Simple GET-based deletion to bypass routing issues
+router.get(
+  "/weeks/:id/delete",
+  authenticateToken,
+  validateParams(analyticsValidators.weekParams),
+  asyncHandler(async (req: Request, res: Response) => {
+    console.log(`=== GET DELETE ENDPOINT HIT ===`);
+    console.log(`GET DELETE request received for week ID: "${req.params.id}"`);
+    
+    // Direct database deletion
+    const { db } = await import('../db');
+    const { weeks } = await import('../../shared/schema');
+    const { eq } = await import('drizzle-orm');
+    
+    try {
+      console.log(`Direct database deletion for week: "${req.params.id}"`);
+      const result = await db.delete(weeks).where(eq(weeks.id, req.params.id));
+      console.log(`Database deletion result:`, result);
+      
+      res.json(successResponse(null, "Week deleted successfully"));
+    } catch (error) {
+      console.error(`Database deletion error:`, error);
+      throw new ApiError("Failed to delete week", 500);
+    }
+  })
+);
+
 // Create new week
 router.post(
   "/weeks",
