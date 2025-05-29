@@ -22,11 +22,17 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1];
 
+    console.log(`🔒 AUTH MIDDLEWARE: ${req.method} ${req.path}`);
+    console.log(`🔒 Auth header present: ${!!authHeader}`);
+    console.log(`🔒 Token extracted: ${!!token}`);
+
     if (!token) {
+      console.log(`🔒 AUTH FAILED: No token provided`);
       throw new ApiError("Access token required", 401);
     }
 
     const decoded = verifyAccessToken(token);
+    console.log(`🔒 AUTH SUCCESS: Token verified for user ${decoded.userId}`);
     
     // Verify user still exists and is active
     const user = await storage.getUser(decoded.userId);
