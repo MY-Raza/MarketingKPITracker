@@ -45,9 +45,21 @@ class SimpleStorage {
         subCategories: [{ id: "10", name: "Referral Programs", displayOrder: 1, stageId: "8" }]
       }
     ],
-    kpis: [],
-    weeks: [],
-    monthlyTargets: []
+    kpis: [
+      { id: "kpi1", name: "Website Traffic", description: "Monthly website visitors", unitType: "number", defaultMonthlyTargetValue: 10000, isActive: true },
+      { id: "kpi2", name: "Email Open Rate", description: "Email campaign open rate", unitType: "percentage", defaultMonthlyTargetValue: 25, isActive: true },
+      { id: "kpi3", name: "Lead Conversion Rate", description: "Percentage of leads that convert", unitType: "percentage", defaultMonthlyTargetValue: 15, isActive: true }
+    ],
+    weeks: [
+      { id: "week1", year: 2024, weekNumber: 20, month: 5, startDateString: "2024-05-13", endDateString: "2024-05-19" },
+      { id: "week2", year: 2024, weekNumber: 21, month: 5, startDateString: "2024-05-20", endDateString: "2024-05-26" },
+      { id: "week3", year: 2024, weekNumber: 22, month: 5, startDateString: "2024-05-27", endDateString: "2024-06-02" }
+    ],
+    monthlyTargets: [
+      { id: "target1", kpiId: "kpi1", monthId: "2024-05", targetValue: 10000 },
+      { id: "target2", kpiId: "kpi2", monthId: "2024-05", targetValue: 25 },
+      { id: "target3", kpiId: "kpi3", monthId: "2024-05", targetValue: 15 }
+    ]
   };
 
   async getCVJStages() { return this.data.cvjStages; }
@@ -172,7 +184,7 @@ app.get("/api/kpis", async (req, res) => {
 app.get("/api/analytics/weeks", async (req, res) => {
   try {
     const weeks = await storage.getWeeks();
-    res.json({ success: true, data: weeks });
+    res.json(weeks);
   } catch (error) {
     console.error('Error:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
@@ -182,7 +194,17 @@ app.get("/api/analytics/weeks", async (req, res) => {
 app.get("/api/monthly-targets", async (req, res) => {
   try {
     const targets = await storage.getMonthlyTargets();
-    res.json({ success: true, data: targets });
+    res.json(targets);
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+app.get("/api/weekly-data", async (req, res) => {
+  try {
+    const weeklyData = await storage.getWeeklyDataEntries();
+    res.json(weeklyData);
   } catch (error) {
     console.error('Error:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
