@@ -123,11 +123,16 @@ export default function Admin() {
     const kpiData = {
       name: formData.name,
       description: formData.description,
-      unitType: formData.unitType,
-      defaultMonthlyTargetValue: parseFloat(formData.defaultMonthlyTargetValue) || null,
+      unitType: formData.unitType.toUpperCase(), // Ensure uppercase to match enum
       subCategoryId: subCategory.id,
       isActive: true
     };
+
+    // Only include defaultMonthlyTargetValue if it's a positive number
+    const targetValue = parseFloat(formData.defaultMonthlyTargetValue);
+    if (targetValue > 0) {
+      kpiData.defaultMonthlyTargetValue = targetValue;
+    }
 
     if (formData.id) {
       updateKpiMutation.mutate({ id: formData.id, ...kpiData });
