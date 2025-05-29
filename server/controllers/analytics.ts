@@ -208,19 +208,13 @@ router.put(
   })
 );
 
-// Delete week
-router.delete(
-  "/weeks/:id",
-  (req, res, next) => {
-    console.log("=== DELETE WEEK ROUTE HIT ===");
-    console.log(`Raw request params:`, req.params);
-    console.log(`Raw request URL:`, req.url);
-    next();
-  },
+// Delete week using POST method to avoid routing conflicts
+router.post(
+  "/weeks/:id/delete",
   authenticateToken,
   validateParams(analyticsValidators.weekParams),
   asyncHandler(async (req: Request, res: Response) => {
-    console.log(`DELETE request received for week ID: "${req.params.id}"`);
+    console.log(`POST DELETE request received for week ID: "${req.params.id}"`);
     const existingWeek = await storage.getWeekById(req.params.id);
     console.log(`Found existing week:`, existingWeek);
     
@@ -232,6 +226,24 @@ router.delete(
     console.log(`Calling storage.deleteWeek with ID: "${req.params.id}"`);
     await storage.deleteWeek(req.params.id);
     console.log("Delete operation completed");
+    res.json(successResponse(null, "Week deleted successfully"));
+  })
+);
+
+// Keep original DELETE method as backup
+router.delete(
+  "/weeks/:id",
+  authenticateToken,
+  validateParams(analyticsValidators.weekParams),
+  asyncHandler(async (req: Request, res: Response) => {
+    console.log(`DELETE request received for week ID: "${req.params.id}"`);
+    const existingWeek = await storage.getWeekById(req.params.id);
+    
+    if (!existingWeek) {
+      throw new ApiError("Week not found", 404);
+    }
+
+    await storage.deleteWeek(req.params.id);
     res.json(successResponse(null, "Week deleted successfully"));
   })
 );
