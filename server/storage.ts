@@ -269,7 +269,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteWeek(id: string): Promise<void> {
-    await db.delete(weeks).where(eq(weeks.id, id));
+    console.log(`Attempting to delete week with id: "${id}"`);
+    const result = await db.delete(weeks).where(eq(weeks.id, id));
+    console.log(`Delete operation result:`, result);
   }
 
   // Weekly Data Entry operations
