@@ -7,9 +7,9 @@ import {
   weeks, 
   weeklyDataEntries, 
   monthlyKpiTargets,
-  type CVJStage,
+  type CvjStage,
   type SubCategory,
-  type KPI,
+  type Kpi,
   type Week,
   type WeeklyDataEntry,
   type MonthlyKpiTarget
@@ -18,8 +18,8 @@ import { eq } from "drizzle-orm";
 
 export interface IStorage {
   // CVJ Stages
-  getCVJStages(): Promise<CVJStage[]>;
-  getCVJStageById(id: string): Promise<CVJStage | undefined>;
+  getCVJStages(): Promise<CvjStage[]>;
+  getCVJStageById(id: string): Promise<CvjStage | undefined>;
   
   // Sub Categories
   getSubCategories(): Promise<SubCategory[]>;
