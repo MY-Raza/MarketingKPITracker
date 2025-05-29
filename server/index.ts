@@ -65,7 +65,31 @@ app.get("/api/monthly-targets", async (req, res) => {
 
 app.post("/api/monthly-targets", async (req, res) => {
   try {
-    const newTarget = await storage.createMonthlyTarget(req.body);
+    const { kpiId, monthId, targetValue } = req.body;
+    
+    // Validate required fields
+    if (!kpiId || !monthId || targetValue === undefined) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Missing required fields: kpiId, monthId, targetValue' 
+      });
+    }
+
+    // Validate targetValue is a number
+    const numericTargetValue = parseFloat(targetValue);
+    if (isNaN(numericTargetValue)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'targetValue must be a valid number' 
+      });
+    }
+
+    const newTarget = await storage.createMonthlyTarget({
+      kpiId,
+      monthId,
+      targetValue: numericTargetValue
+    });
+    
     res.status(201).json(newTarget);
   } catch (error) {
     console.error('Error creating monthly target:', error);
@@ -99,7 +123,7 @@ app.post("/api/sub-categories", async (req, res) => {
     const { name, stageId, displayOrder } = req.body;
     const newSubCategory = await storage.createSubCategory({
       name,
-      stageId,
+      cvjStageId: stageId,
       displayOrder: displayOrder || 1
     });
     res.status(201).json(newSubCategory);
@@ -115,7 +139,7 @@ app.put("/api/sub-categories/:id", async (req, res) => {
     const { name, stageId, displayOrder } = req.body;
     const updatedSubCategory = await storage.updateSubCategory(id, {
       name,
-      stageId,
+      cvjStageId: stageId,
       displayOrder
     });
     res.json(updatedSubCategory);
@@ -132,6 +156,178 @@ app.post("/api/sub-categories/:id/delete", async (req, res) => {
     res.json({ success: true, message: 'Subcategory deleted successfully' });
   } catch (error) {
     console.error("Error deleting subcategory:", error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// KPI endpoints
+app.get("/api/kpis", async (req, res) => {
+  try {
+    const kpis = await storage.getKPIs();
+    res.json(kpis);
+  } catch (error) {
+    console.error('Error fetching KPIs:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+app.post("/api/kpis", async (req, res) => {
+  try {
+    const { name, description, unitType, defaultMonthlyTargetValue, subCategoryId } = req.body;
+    
+    if (!name || !unitType || !subCategoryId) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Missing required fields: name, unitType, subCategoryId' 
+      });
+    }
+
+    const kpiData = {
+      name,
+      description: description || '',
+      unitType,
+      defaultMonthlyTargetValue: defaultMonthlyTargetValue ? parseFloat(defaultMonthlyTargetValue) : null,
+      subCategoryId,
+      isActive: true
+    };
+
+    const newKPI = await storage.createKPI(kpiData);
+    res.status(201).json(newKPI);
+  } catch (error) {
+    console.error('Error creating KPI:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+app.put("/api/kpis/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description, unitType, defaultMonthlyTargetValue } = req.body;
+    
+    const updateData = {
+      name,
+      description,
+      unitType,
+      defaultMonthlyTargetValue: defaultMonthlyTargetValue ? parseFloat(defaultMonthlyTargetValue) : null
+    };
+
+    const updatedKPI = await storage.updateKPI(id, updateData);
+    res.json(updatedKPI);
+  } catch (error) {
+    console.error('Error updating KPI:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+app.post("/api/kpis/:id/delete", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await storage.deleteKPI(id);
+    res.json({ success: true, message: 'KPI deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting KPI:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Weekly data endpoints
+app.post("/api/weekly-data", async (req, res) => {
+  try {
+    const { weekId, kpiId, actualValue, notes } = req.body;
+    
+    if (!weekId || !kpiId) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Missing required fields: weekId, kpiId' 
+      });
+    }
+
+    const weeklyData = {
+      weekId,
+      kpiId,
+      actualValue: actualValue ? parseFloat(actualValue) : null,
+      notes: notes || null
+    };
+
+    const newEntry = await storage.createWeeklyDataEntry(weeklyData);
+    res.status(201).json(newEntry);
+  } catch (error) {
+    console.error('Error creating weekly data:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+app.put("/api/weekly-data/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { actualValue, notes } = req.body;
+    
+    const updateData = {
+      actualValue: actualValue ? parseFloat(actualValue) : null,
+      notes: notes || null
+    };
+
+    const updatedEntry = await storage.updateWeeklyDataEntry(id, updateData);
+    res.json(updatedEntry);
+  } catch (error) {
+    console.error('Error updating weekly data:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Week management endpoints
+app.post("/api/weeks", async (req, res) => {
+  try {
+    const { id, year, weekNumber, month, startDateString, endDateString } = req.body;
+    
+    if (!id || !year || !weekNumber || !month || !startDateString || !endDateString) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Missing required fields' 
+      });
+    }
+
+    const weekData = {
+      id,
+      year: parseInt(year),
+      weekNumber: parseInt(weekNumber), 
+      month: parseInt(month),
+      startDateString,
+      endDateString
+    };
+
+    const newWeek = await storage.createWeek(weekData);
+    res.status(201).json(newWeek);
+  } catch (error) {
+    console.error('Error creating week:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+app.put("/api/weeks/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+    
+    if (updateData.year) updateData.year = parseInt(updateData.year);
+    if (updateData.weekNumber) updateData.weekNumber = parseInt(updateData.weekNumber);
+    if (updateData.month) updateData.month = parseInt(updateData.month);
+
+    const updatedWeek = await storage.updateWeek(id, updateData);
+    res.json(updatedWeek);
+  } catch (error) {
+    console.error('Error updating week:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+app.post("/api/weeks/:id/delete", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await storage.deleteWeek(id);
+    res.json({ success: true, message: 'Week deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting week:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
