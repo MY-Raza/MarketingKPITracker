@@ -268,21 +268,43 @@ export default function Admin() {
     setIsSubcategoryModalOpen(true);
   }, []);
 
+  // Subcategory mutations
+  const createSubcategoryMutation = useMutation({
+    mutationFn: (data: any) => apiClient.createSubcategory(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages'] });
+      setIsSubcategoryModalOpen(false);
+      setEditingSubcategory(undefined);
+    }
+  });
+
+  const updateSubcategoryMutation = useMutation({
+    mutationFn: ({ id, ...data }: any) => apiClient.updateSubcategory(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages'] });
+      setIsSubcategoryModalOpen(false);
+      setEditingSubcategory(undefined);
+    }
+  });
+
+  const deleteSubcategoryMutation = useMutation({
+    mutationFn: (id: string) => apiClient.deleteSubcategory(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages'] });
+    }
+  });
+
   const handleSubcategoryFormSubmit = useCallback((formData: any) => {
     if (editingSubcategory) {
-      // Update existing subcategory
-      console.log('Update subcategory:', formData);
+      updateSubcategoryMutation.mutate({ id: editingSubcategory.id, ...formData });
     } else {
-      // Create new subcategory
-      console.log('Create subcategory:', formData);
+      createSubcategoryMutation.mutate(formData);
     }
-    setIsSubcategoryModalOpen(false);
-    setEditingSubcategory(undefined);
-  }, [editingSubcategory]);
+  }, [editingSubcategory, createSubcategoryMutation, updateSubcategoryMutation]);
 
   const handleDeleteSubcategory = useCallback((subcategoryId: string) => {
-    console.log('Delete subcategory:', subcategoryId);
-  }, []);
+    deleteSubcategoryMutation.mutate(subcategoryId);
+  }, [deleteSubcategoryMutation]);
 
   const filteredTargets = monthlyTargets.filter(target => target.monthId === selectedMonthId);
 
@@ -671,6 +693,7 @@ export default function Admin() {
                       variant="outline"
                       size="sm"
                       className="bg-white text-slate-700 hover:bg-slate-50"
+                      onClick={() => openSubcategoryModal(undefined, stage.id)}
                     >
                       <Plus className="w-4 h-4 mr-2" />
                       Add Subcategory

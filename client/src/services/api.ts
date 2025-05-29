@@ -468,6 +468,23 @@ class ApiClient {
   async deleteWeek(id: string): Promise<void> {
     return this.post('/api/admin/delete-week', { weekId: id });
   }
+
+  // Subcategories
+  async getSubcategories(): Promise<any[]> {
+    return this.get('/api/analytics/subcategories');
+  }
+
+  async createSubcategory(data: any): Promise<any> {
+    return this.post('/api/analytics/subcategories', data);
+  }
+
+  async updateSubcategory(id: string, data: any): Promise<any> {
+    return this.put(`/api/analytics/subcategories/${id}`, data);
+  }
+
+  async deleteSubcategory(id: string): Promise<void> {
+    return this.delete(`/api/analytics/subcategories/${id}`);
+  }
 }
 
 // Create and export a singleton instance
