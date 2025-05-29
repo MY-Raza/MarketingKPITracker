@@ -18,7 +18,8 @@ class ApiClient {
   private tokens: AuthTokens | null = null;
 
   constructor() {
-    this.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    this.baseURL = import.meta.env.VITE_API_URL || '';
+    console.log('API Base URL:', this.baseURL);
   }
 
   setTokens(tokens: AuthTokens) {
