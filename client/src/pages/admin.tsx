@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, Settings, Target, Calendar } from "lucide-react";
 import { useAuth } from '../hooks/use-auth';
-import { apiRequest } from '../lib/queryClient';
+import { apiClient } from '../services/api';
 import { 
   CVJStageName, 
   UnitType, 
@@ -37,58 +37,22 @@ export default function Admin() {
   const [adminTab, setAdminTab] = useState<'kpis' | 'targets' | 'weeks'>('kpis');
   const [selectedMonthId, setSelectedMonthId] = useState<string>('2025-05');
 
-  // For now, use the seeded database data through a working connection
-  // Fetch CVJ stages with hierarchy from API
+  // Fetch CVJ stages with hierarchy from API using authenticated client
   const { data: cvjStages = [], isLoading: isLoadingStages } = useQuery({
     queryKey: ['/api/cvj-stages', 'hierarchy'],
-    queryFn: async () => {
-      const response = await fetch('/api/cvj-stages?include_hierarchy=true', {
-        credentials: 'include'
-      });
-      if (!response.ok) {
-        // Fallback to database seeded data structure for now
-        return [
-          {
-            id: "1", name: "Aware", displayOrder: 1, colorCode: "from-blue-500 to-blue-600", isActive: true,
-            subCategories: [
-              { id: "1", name: "Brand Awareness", displayOrder: 1, kpis: [] },
-              { id: "2", name: "Content Reach", displayOrder: 2, kpis: [] }
-            ]
-          },
-          {
-            id: "2", name: "Engage", displayOrder: 2, colorCode: "from-green-500 to-green-600", isActive: true,
-            subCategories: [
-              { id: "3", name: "Social Engagement", displayOrder: 1, kpis: [] },
-              { id: "4", name: "Content Engagement", displayOrder: 2, kpis: [] }
-            ]
-          }
-        ];
-      }
-      const result = await response.json();
-      return result.data;
-    }
+    queryFn: () => apiClient.getCvjStages(true, false)
   });
 
-  // Fetch weeks from API
+  // Fetch weeks from API using authenticated client
   const { data: weeks = [], isLoading: isLoadingWeeks } = useQuery({
-    queryKey: ['/api/weekly-data/weeks'],
-    queryFn: async () => {
-      const response = await fetch('/api/weekly-data/weeks');
-      if (!response.ok) throw new Error('Failed to fetch weeks');
-      const result = await response.json();
-      return result.data;
-    }
+    queryKey: ['/api/analytics/weeks'],
+    queryFn: () => apiClient.getWeeks()
   });
 
-  // Fetch monthly targets from API
+  // Fetch monthly targets from API using authenticated client  
   const { data: monthlyTargets = [], isLoading: isLoadingTargets } = useQuery({
     queryKey: ['/api/monthly-targets'],
-    queryFn: async () => {
-      const response = await fetch('/api/monthly-targets');
-      if (!response.ok) throw new Error('Failed to fetch monthly targets');
-      const result = await response.json();
-      return result.data;
-    }
+    queryFn: () => apiClient.getMonthlyTargets()
   });
   
   // Modal states
@@ -120,25 +84,9 @@ export default function Admin() {
     setIsKpiModalOpen(true);
   }, []);
 
-  // KPI mutations - directly save to database
+  // KPI mutations using authenticated API client
   const createKpiMutation = useMutation({
-    mutationFn: async (kpiData: any) => {
-      const response = await fetch('/api/kpis', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(kpiData)
-      });
-      
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`Failed to create KPI: ${error}`);
-      }
-      
-      return response.json();
-    },
+    mutationFn: (kpiData: any) => apiClient.createKpi(kpiData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages'] });
       setIsKpiModalOpen(false);
@@ -147,9 +95,7 @@ export default function Admin() {
   });
 
   const updateKpiMutation = useMutation({
-    mutationFn: async ({ id, ...kpiData }: any) => {
-      return await apiRequest('PUT', `/api/kpis/${id}`, kpiData);
-    },
+    mutationFn: ({ id, ...kpiData }: any) => apiClient.updateKpi(id, kpiData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages'] });
       setIsKpiModalOpen(false);
@@ -158,9 +104,7 @@ export default function Admin() {
   });
 
   const deleteKpiMutation = useMutation({
-    mutationFn: async (kpiId: string) => {
-      return await apiRequest('DELETE', `/api/kpis/${kpiId}`);
-    },
+    mutationFn: (kpiId: string) => apiClient.deleteKpi(kpiId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages'] });
     }
@@ -201,59 +145,96 @@ export default function Admin() {
     setIsMonthlyTargetModalOpen(true);
   }, []);
 
+  // Monthly targets mutations using authenticated API client
+  const createMonthlyTargetMutation = useMutation({
+    mutationFn: (targetData: any) => apiClient.createMonthlyTarget(targetData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/monthly-targets'] });
+      setIsMonthlyTargetModalOpen(false);
+      setEditingMonthlyTarget(undefined);
+    }
+  });
+
+  const updateMonthlyTargetMutation = useMutation({
+    mutationFn: ({ id, ...targetData }: any) => apiClient.updateMonthlyTarget(id, targetData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/monthly-targets'] });
+      setIsMonthlyTargetModalOpen(false);
+      setEditingMonthlyTarget(undefined);
+    }
+  });
+
+  const deleteMonthlyTargetMutation = useMutation({
+    mutationFn: (targetId: string) => apiClient.deleteMonthlyTarget(targetId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/monthly-targets'] });
+    }
+  });
+
   const handleMonthlyTargetFormSubmit = useCallback((formData: MonthlyTargetFormData) => {
-    const newMonthlyTarget: MonthlyKpiTarget = {
-      id: formData.id || generateId(),
+    const targetData = {
       kpiId: formData.kpiId,
       monthId: formData.monthId,
       targetValue: parseFloat(formData.targetValue),
     };
 
-    setMonthlyTargets(prevTargets => {
-      if (formData.id) {
-        return prevTargets.map(target => 
-          target.id === formData.id ? newMonthlyTarget : target
-        );
-      } else {
-        return [...prevTargets, newMonthlyTarget];
-      }
-    });
-
-    setIsMonthlyTargetModalOpen(false);
-    setEditingMonthlyTarget(undefined);
-  }, []);
+    if (formData.id) {
+      updateMonthlyTargetMutation.mutate({ id: formData.id, ...targetData });
+    } else {
+      createMonthlyTargetMutation.mutate(targetData);
+    }
+  }, [createMonthlyTargetMutation, updateMonthlyTargetMutation]);
 
   const handleDeleteMonthlyTarget = useCallback((targetId: string) => {
-    setMonthlyTargets(prevTargets => prevTargets.filter(target => target.id !== targetId));
-  }, []);
+    deleteMonthlyTargetMutation.mutate(targetId);
+  }, [deleteMonthlyTargetMutation]);
 
   const openWeekModal = useCallback((weekToEdit?: Week) => {
     setEditingWeek(weekToEdit);
     setIsWeekModalOpen(true);
   }, []);
 
+  // Week mutations using authenticated API client
+  const createWeekMutation = useMutation({
+    mutationFn: (weekData: any) => apiClient.createWeek(weekData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/analytics/weeks'] });
+      setIsWeekModalOpen(false);
+      setEditingWeek(undefined);
+    }
+  });
+
+  const updateWeekMutation = useMutation({
+    mutationFn: ({ id, ...weekData }: any) => apiClient.updateWeek(id, weekData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/analytics/weeks'] });
+      setIsWeekModalOpen(false);
+      setEditingWeek(undefined);
+    }
+  });
+
+  const deleteWeekMutation = useMutation({
+    mutationFn: (weekId: string) => apiClient.deleteWeek(weekId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/analytics/weeks'] });
+    }
+  });
+
   const handleAddOrUpdateWeek = useCallback((formData: WeekFormData) => {
     const startDate = new Date(formData.startDate);
     const endDate = new Date(formData.endDate);
-    const newWeek = createWeekObjectFromFormData(startDate, endDate);
+    const weekData = createWeekObjectFromFormData(startDate, endDate);
 
-    setWeeks(prevWeeks => {
-      if (formData.originalId) {
-        return prevWeeks.map(week => 
-          week.id === formData.originalId ? newWeek : week
-        );
-      } else {
-        return [...prevWeeks, newWeek];
-      }
-    });
-
-    setIsWeekModalOpen(false);
-    setEditingWeek(undefined);
-  }, []);
+    if (formData.originalId) {
+      updateWeekMutation.mutate({ id: formData.originalId, ...weekData });
+    } else {
+      createWeekMutation.mutate(weekData);
+    }
+  }, [createWeekMutation, updateWeekMutation]);
 
   const handleDeleteWeek = useCallback((weekId: string) => {
-    setWeeks(prevWeeks => prevWeeks.filter(week => week.id !== weekId));
-  }, []);
+    deleteWeekMutation.mutate(weekId);
+  }, [deleteWeekMutation]);
 
   const filteredTargets = monthlyTargets.filter(target => target.monthId === selectedMonthId);
 
