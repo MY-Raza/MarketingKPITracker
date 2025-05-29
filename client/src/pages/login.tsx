@@ -162,11 +162,12 @@ export default function Login() {
                         <FormLabel>Email Address</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                            <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400 pointer-events-none" />
                             <Input 
                               className="pl-10" 
                               placeholder="john@example.com" 
-                              type="email" 
+                              type="email"
+                              autoComplete="email"
                               {...field} 
                             />
                           </div>
@@ -232,11 +233,12 @@ export default function Login() {
                         <FormLabel>Email Address</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                            <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400 pointer-events-none" />
                             <Input 
                               className="pl-10" 
                               placeholder="john@example.com" 
-                              type="email" 
+                              type="email"
+                              autoComplete="email"
                               {...field} 
                             />
                           </div>
