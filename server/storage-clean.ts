@@ -1,4 +1,4 @@
-// Simplified storage implementation to bypass complex query issues
+// Clean storage implementation
 import { db } from "./db";
 import { 
   cvjStages, 
@@ -57,7 +57,6 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   // Dashboard Data
   async getDashboardDataForMonth(monthId: string): Promise<any> {
-    // Return basic dashboard structure
     return {
       monthId,
       cvjStages: await this.getCVJStages(),
@@ -69,36 +68,40 @@ export class DatabaseStorage implements IStorage {
 
   // CVJ Stages
   async getCVJStages(): Promise<any[]> {
-    const stages = await db.select().from(cvjStages).orderBy(cvjStages.displayOrder);
-    
-    // Build the nested structure that the frontend expects
-    const stagesWithSubcategories = await Promise.all(
-      stages.map(async (stage) => {
-        const subs = await db.select().from(subCategories)
-          .where(eq(subCategories.cvjStageId, stage.id))
-          .orderBy(subCategories.displayOrder);
-        
-        const subcategoriesWithKpis = await Promise.all(
-          subs.map(async (sub) => {
-            const kpis = await db.select().from(kpis)
-              .where(eq(kpis.subCategoryId, sub.id))
-              .orderBy(kpis.name);
-            
-            return {
-              ...sub,
-              kpis: kpis
-            };
-          })
-        );
-        
-        return {
-          ...stage,
-          subCategories: subcategoriesWithKpis
-        };
-      })
-    );
-    
-    return stagesWithSubcategories;
+    try {
+      const stages = await db.select().from(cvjStages).orderBy(cvjStages.displayOrder);
+      
+      const stagesWithSubcategories = await Promise.all(
+        stages.map(async (stage) => {
+          const subs = await db.select().from(subCategories)
+            .where(eq(subCategories.cvjStageId, stage.id))
+            .orderBy(subCategories.displayOrder);
+          
+          const subcategoriesWithKpis = await Promise.all(
+            subs.map(async (sub) => {
+              const kpiList = await db.select().from(kpis)
+                .where(eq(kpis.subCategoryId, sub.id))
+                .orderBy(kpis.name);
+              
+              return {
+                ...sub,
+                kpis: kpiList
+              };
+            })
+          );
+          
+          return {
+            ...stage,
+            subCategories: subcategoriesWithKpis
+          };
+        })
+      );
+      
+      return stagesWithSubcategories;
+    } catch (error) {
+      console.error('Error in getCVJStages:', error);
+      throw error;
+    }
   }
 
   async getCvjStages(): Promise<any[]> {
@@ -127,16 +130,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createSubCategory(data: any): Promise<any> {
-    const result = await db.insert(subCategories).values(data).returning();
-    return result[0];
+    const [result] = await db.insert(subCategories).values(data).returning();
+    return result;
   }
 
   async updateSubCategory(id: string, data: any): Promise<any> {
-    const result = await db.update(subCategories)
-      .set(data)
-      .where(eq(subCategories.id, id))
-      .returning();
-    return result[0];
+    const [result] = await db.update(subCategories).set(data).where(eq(subCategories.id, id)).returning();
+    return result;
   }
 
   async deleteSubCategory(id: string): Promise<void> {
@@ -155,16 +155,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createKPI(data: any): Promise<any> {
-    const result = await db.insert(kpis).values(data).returning();
-    return result[0];
+    const [result] = await db.insert(kpis).values(data).returning();
+    return result;
   }
 
   async updateKPI(id: string, data: any): Promise<any> {
-    const result = await db.update(kpis)
-      .set(data)
-      .where(eq(kpis.id, id))
-      .returning();
-    return result[0];
+    const [result] = await db.update(kpis).set(data).where(eq(kpis.id, id)).returning();
+    return result;
   }
 
   async deleteKPI(id: string): Promise<void> {
@@ -183,16 +180,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createWeek(data: any): Promise<any> {
-    const result = await db.insert(weeks).values(data).returning();
-    return result[0];
+    const [result] = await db.insert(weeks).values(data).returning();
+    return result;
   }
 
   async updateWeek(id: string, data: any): Promise<any> {
-    const result = await db.update(weeks)
-      .set(data)
-      .where(eq(weeks.id, id))
-      .returning();
-    return result[0];
+    const [result] = await db.update(weeks).set(data).where(eq(weeks.id, id)).returning();
+    return result;
   }
 
   async deleteWeek(id: string): Promise<void> {
@@ -206,16 +200,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createWeeklyDataEntry(data: any): Promise<any> {
-    const result = await db.insert(weeklyDataEntries).values(data).returning();
-    return result[0];
+    const [result] = await db.insert(weeklyDataEntries).values(data).returning();
+    return result;
   }
 
   async updateWeeklyDataEntry(id: string, data: any): Promise<any> {
-    const result = await db.update(weeklyDataEntries)
-      .set(data)
-      .where(eq(weeklyDataEntries.id, id))
-      .returning();
-    return result[0];
+    const [result] = await db.update(weeklyDataEntries).set(data).where(eq(weeklyDataEntries.id, id)).returning();
+    return result;
   }
 
   async deleteWeeklyDataEntry(id: string): Promise<void> {
@@ -229,16 +220,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createMonthlyTarget(data: any): Promise<any> {
-    const result = await db.insert(monthlyKpiTargets).values(data).returning();
-    return result[0];
+    const [result] = await db.insert(monthlyKpiTargets).values(data).returning();
+    return result;
   }
 
   async updateMonthlyTarget(id: string, data: any): Promise<any> {
-    const result = await db.update(monthlyKpiTargets)
-      .set(data)
-      .where(eq(monthlyKpiTargets.id, id))
-      .returning();
-    return result[0];
+    const [result] = await db.update(monthlyKpiTargets).set(data).where(eq(monthlyKpiTargets.id, id)).returning();
+    return result;
   }
 
   async deleteMonthlyTarget(id: string): Promise<void> {

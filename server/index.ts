@@ -1,7 +1,7 @@
 import express from "express";
 import { createServer } from "http";
 import { setupVite, serveStatic } from "./vite";
-import { storage } from "./storage-simple";
+import { storage } from "./storage-clean";
 
 const app = express();
 
