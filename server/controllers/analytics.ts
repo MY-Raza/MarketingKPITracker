@@ -211,6 +211,12 @@ router.put(
 // Delete week
 router.delete(
   "/weeks/:id",
+  (req, res, next) => {
+    console.log("=== DELETE WEEK ROUTE HIT ===");
+    console.log(`Raw request params:`, req.params);
+    console.log(`Raw request URL:`, req.url);
+    next();
+  },
   authenticateToken,
   validateParams(analyticsValidators.weekParams),
   asyncHandler(async (req: Request, res: Response) => {
