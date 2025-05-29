@@ -171,9 +171,15 @@ export default function Login() {
                 </div>
 
                 <Button 
-                  onClick={() => {
-                    const values = registerForm.getValues();
-                    handleRegister(values);
+                  onClick={async () => {
+                    try {
+                      const values = registerForm.getValues();
+                      console.log("Form values:", values);
+                      await handleRegister(values);
+                    } catch (error) {
+                      console.error("Registration error:", error);
+                      setError(error instanceof Error ? error.message : "Registration failed");
+                    }
                   }}
                   className="w-full" 
                   disabled={isLoading}
