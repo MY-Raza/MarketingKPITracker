@@ -206,6 +206,12 @@ export default function Admin() {
       queryClient.invalidateQueries({ queryKey: ['/api/analytics/weeks'] });
       setIsWeekModalOpen(false);
       setEditingWeek(undefined);
+    },
+    onError: (error: any) => {
+      console.error('Week creation failed:', error);
+      // Display the server error message
+      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to create week';
+      alert(errorMessage);
     }
   });
 
@@ -240,25 +246,13 @@ export default function Admin() {
     const endDate = new Date(formData.endDate);
     const weekData = createWeekObjectFromFormData(startDate, endDate);
 
-    // Check for duplicate weeks when creating new week
-    if (!formData.originalId) {
-      const isDuplicate = weeks.some(week => 
-        week.id === weekData.id || 
-        (week.startDateString === weekData.startDateString && week.endDateString === weekData.endDateString)
-      );
-      
-      if (isDuplicate) {
-        alert('A week with these dates already exists. Please choose different dates.');
-        return;
-      }
-    }
-
     if (formData.originalId) {
       updateWeekMutation.mutate({ id: formData.originalId, ...weekData });
     } else {
+      // Create new week - server will handle duplicate validation and show appropriate error
       createWeekMutation.mutate(weekData);
     }
-  }, [weeks, createWeekMutation, updateWeekMutation]);
+  }, [createWeekMutation, updateWeekMutation]);
 
   const handleDeleteWeek = useCallback((weekId: string) => {
     deleteWeekMutation.mutate(weekId);

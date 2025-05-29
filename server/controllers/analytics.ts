@@ -213,6 +213,25 @@ router.post(
   authenticateToken,
   validateRequest(analyticsValidators.createWeek),
   asyncHandler(async (req: Request, res: Response) => {
+    // Check for duplicate weeks before creating
+    const existingWeeks = await storage.getWeeks();
+    const newWeekId = req.body.id;
+    
+    // Check if a week with the same ID already exists
+    const duplicateById = existingWeeks.find(week => week.id === newWeekId);
+    if (duplicateById) {
+      throw new ApiError(`A week with ID "${newWeekId}" already exists. Please choose different dates.`, 409);
+    }
+    
+    // Check if a week with the same date range already exists
+    const duplicateByDates = existingWeeks.find(week => 
+      week.startDateString === req.body.startDateString && 
+      week.endDateString === req.body.endDateString
+    );
+    if (duplicateByDates) {
+      throw new ApiError(`A week with the date range ${req.body.startDateString} to ${req.body.endDateString} already exists.`, 409);
+    }
+    
     const week = await storage.createWeek(req.body);
     res.status(201).json(successResponse(week, "Week created successfully"));
   })
