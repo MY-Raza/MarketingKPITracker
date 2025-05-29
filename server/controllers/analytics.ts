@@ -299,4 +299,84 @@ router.delete(
   })
 );
 
+// ===================
+// SUB CATEGORY ROUTES
+// ===================
+
+// Get subcategories by stage ID
+router.get(
+  "/stages/:stageId/subcategories",
+  authenticateToken,
+  validateParams(analyticsValidators.stageParams),
+  asyncHandler(async (req: Request, res: Response) => {
+    const subcategories = await storage.getSubCategoriesByStageId(req.params.stageId);
+    res.json(successResponse(subcategories, "Subcategories retrieved successfully"));
+  })
+);
+
+// Get all subcategories
+router.get(
+  "/subcategories",
+  authenticateToken,
+  asyncHandler(async (req: Request, res: Response) => {
+    const allStages = await storage.getCvjStages();
+    const subcategoriesWithStage = [];
+    
+    for (const stage of allStages) {
+      const subcategories = await storage.getSubCategoriesByStageId(stage.id);
+      subcategoriesWithStage.push(...subcategories.map(sub => ({ ...sub, stageName: stage.name })));
+    }
+    
+    res.json(successResponse(subcategoriesWithStage, "All subcategories retrieved successfully"));
+  })
+);
+
+// Get subcategory by ID
+router.get(
+  "/subcategories/:id",
+  authenticateToken,
+  validateParams(analyticsValidators.subcategoryParams),
+  asyncHandler(async (req: Request, res: Response) => {
+    const subcategory = await storage.getSubCategoryById(req.params.id);
+    if (!subcategory) {
+      throw new ApiError("Subcategory not found", 404);
+    }
+    res.json(successResponse(subcategory, "Subcategory retrieved successfully"));
+  })
+);
+
+// Create new subcategory
+router.post(
+  "/subcategories",
+  authenticateToken,
+  validateRequest(analyticsValidators.createSubcategory),
+  asyncHandler(async (req: Request, res: Response) => {
+    const subcategory = await storage.createSubCategory(req.body);
+    res.status(201).json(successResponse(subcategory, "Subcategory created successfully"));
+  })
+);
+
+// Update subcategory
+router.put(
+  "/subcategories/:id",
+  authenticateToken,
+  validateParams(analyticsValidators.subcategoryParams),
+  validateRequest(analyticsValidators.updateSubcategory),
+  asyncHandler(async (req: Request, res: Response) => {
+    const subcategory = await storage.updateSubCategory(req.params.id, req.body);
+    res.json(successResponse(subcategory, "Subcategory updated successfully"));
+  })
+);
+
+// Delete subcategory
+router.delete(
+  "/subcategories/:id",
+  authenticateToken,
+  validateParams(analyticsValidators.subcategoryParams),
+  asyncHandler(async (req: Request, res: Response) => {
+    await storage.deleteSubCategory(req.params.id);
+    res.json(successResponse(null, "Subcategory deleted successfully"));
+  })
+);
+
 export default router;
