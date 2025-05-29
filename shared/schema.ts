@@ -4,7 +4,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // Enums
-export const userRoleEnum = pgEnum('user_role', ['ADMIN', 'USER']);
+export const userRoleEnum = pgEnum('user_role', ['ADMIN']);
 export const unitTypeEnum = pgEnum('unit_type', ['NUMBER', 'PERCENTAGE', 'CURRENCY', 'DURATION_SECONDS', 'TEXT']);
 
 // Users table
@@ -14,7 +14,7 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
-  role: userRoleEnum("role").default('USER').notNull(),
+  role: userRoleEnum("role").default('ADMIN').notNull(),
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

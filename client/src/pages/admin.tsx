@@ -120,7 +120,7 @@ export default function Admin() {
       return;
     }
 
-    const kpiData = {
+    const kpiData: any = {
       name: formData.name,
       description: formData.description,
       unitType: formData.unitType.toUpperCase(), // Ensure uppercase to match enum
@@ -230,12 +230,25 @@ export default function Admin() {
     const endDate = new Date(formData.endDate);
     const weekData = createWeekObjectFromFormData(startDate, endDate);
 
+    // Check for duplicate weeks when creating new week
+    if (!formData.originalId) {
+      const isDuplicate = weeks.some(week => 
+        week.id === weekData.id || 
+        (week.startDateString === weekData.startDateString && week.endDateString === weekData.endDateString)
+      );
+      
+      if (isDuplicate) {
+        alert('A week with these dates already exists. Please choose different dates.');
+        return;
+      }
+    }
+
     if (formData.originalId) {
       updateWeekMutation.mutate({ id: formData.originalId, ...weekData });
     } else {
       createWeekMutation.mutate(weekData);
     }
-  }, [createWeekMutation, updateWeekMutation]);
+  }, [weeks, createWeekMutation, updateWeekMutation]);
 
   const handleDeleteWeek = useCallback((weekId: string) => {
     deleteWeekMutation.mutate(weekId);
