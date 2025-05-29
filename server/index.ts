@@ -9,40 +9,76 @@ class SimpleStorage {
       {
         id: "1", name: "Aware", displayOrder: 1, colorCode: "bg-blue-500",
         subCategories: [
-          { id: "1", name: "SEO & Content Marketing", displayOrder: 1, stageId: "1" },
-          { id: "2", name: "Social Media Marketing", displayOrder: 2, stageId: "1" }
+          { 
+            id: "1", name: "SEO & Content Marketing", displayOrder: 1, stageId: "1",
+            kpis: [
+              { id: "kpi1", name: "Website Traffic", description: "Monthly website visitors", unitType: "number", defaultMonthlyTargetValue: 10000, isActive: true }
+            ]
+          },
+          { 
+            id: "2", name: "Social Media Marketing", displayOrder: 2, stageId: "1",
+            kpis: [
+              { id: "kpi2", name: "Email Open Rate", description: "Email campaign open rate", unitType: "percentage", defaultMonthlyTargetValue: 25, isActive: true }
+            ]
+          }
         ]
       },
       {
         id: "2", name: "Engage", displayOrder: 2, colorCode: "bg-green-500",
         subCategories: [
-          { id: "3", name: "Email Marketing", displayOrder: 1, stageId: "2" },
-          { id: "4", name: "Content Engagement", displayOrder: 2, stageId: "2" }
+          { 
+            id: "3", name: "Email Marketing", displayOrder: 1, stageId: "2",
+            kpis: [
+              { id: "kpi3", name: "Lead Conversion Rate", description: "Percentage of leads that convert", unitType: "percentage", defaultMonthlyTargetValue: 15, isActive: true }
+            ]
+          },
+          { 
+            id: "4", name: "Content Engagement", displayOrder: 2, stageId: "2",
+            kpis: []
+          }
         ]
       },
       {
         id: "3", name: "Subscribe", displayOrder: 3, colorCode: "bg-yellow-500",
-        subCategories: [{ id: "5", name: "Lead Generation", displayOrder: 1, stageId: "3" }]
+        subCategories: [{ 
+          id: "5", name: "Lead Generation", displayOrder: 1, stageId: "3",
+          kpis: []
+        }]
       },
       {
         id: "4", name: "Convert", displayOrder: 4, colorCode: "bg-orange-500",
-        subCategories: [{ id: "6", name: "Sales Conversion", displayOrder: 1, stageId: "4" }]
+        subCategories: [{ 
+          id: "6", name: "Sales Conversion", displayOrder: 1, stageId: "4",
+          kpis: []
+        }]
       },
       {
         id: "5", name: "Excite", displayOrder: 5, colorCode: "bg-red-500",
-        subCategories: [{ id: "7", name: "Customer Onboarding", displayOrder: 1, stageId: "5" }]
+        subCategories: [{ 
+          id: "7", name: "Customer Onboarding", displayOrder: 1, stageId: "5",
+          kpis: []
+        }]
       },
       {
         id: "6", name: "Ascend", displayOrder: 6, colorCode: "bg-purple-500",
-        subCategories: [{ id: "8", name: "Upsell & Cross-sell", displayOrder: 1, stageId: "6" }]
+        subCategories: [{ 
+          id: "8", name: "Upsell & Cross-sell", displayOrder: 1, stageId: "6",
+          kpis: []
+        }]
       },
       {
         id: "7", name: "Advocate", displayOrder: 7, colorCode: "bg-indigo-500",
-        subCategories: [{ id: "9", name: "Customer Success", displayOrder: 1, stageId: "7" }]
+        subCategories: [{ 
+          id: "9", name: "Customer Success", displayOrder: 1, stageId: "7",
+          kpis: []
+        }]
       },
       {
         id: "8", name: "Promote", displayOrder: 8, colorCode: "bg-pink-500",
-        subCategories: [{ id: "10", name: "Referral Programs", displayOrder: 1, stageId: "8" }]
+        subCategories: [{ 
+          id: "10", name: "Referral Programs", displayOrder: 1, stageId: "8",
+          kpis: []
+        }]
       }
     ],
     kpis: [
@@ -124,7 +160,7 @@ app.use((req, res, next) => {
 app.get("/api/cvj-stages", async (req, res) => {
   try {
     const stages = await storage.getCVJStages();
-    res.json({ success: true, data: stages });
+    res.json(stages);
   } catch (error) {
     console.error('Error:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
