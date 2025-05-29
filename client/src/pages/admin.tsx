@@ -34,7 +34,7 @@ const getMonthName = (year: number, month: number): string => {
 
 export default function Admin() {
   const queryClient = useQueryClient();
-  const [adminTab, setAdminTab] = useState<'kpis' | 'targets' | 'weeks'>('kpis');
+  const [adminTab, setAdminTab] = useState<'kpis' | 'targets' | 'weeks' | 'subcategories'>('kpis');
   const [selectedMonthId, setSelectedMonthId] = useState<string>('2025-05');
 
   // Fetch CVJ stages with hierarchy from API using authenticated client

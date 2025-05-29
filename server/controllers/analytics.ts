@@ -1,4 +1,5 @@
 import { Router, Request, Response } from "express";
+import { z } from "zod";
 import { storage } from "../storage";
 import { authenticateToken } from "../middleware/auth";
 import { validateParams, validateQuery, validateRequest } from "../middleware/validation";
@@ -307,7 +308,7 @@ router.delete(
 router.get(
   "/stages/:stageId/subcategories",
   authenticateToken,
-  validateParams(analyticsValidators.stageParams),
+  validateParams(z.object({ stageId: z.string().uuid() })),
   asyncHandler(async (req: Request, res: Response) => {
     const subcategories = await storage.getSubCategoriesByStageId(req.params.stageId);
     res.json(successResponse(subcategories, "Subcategories retrieved successfully"));

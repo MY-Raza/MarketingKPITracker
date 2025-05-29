@@ -262,5 +262,21 @@ export const analyticsValidators = {
     month: z.number().int().min(1).max(12).optional(),
     startDateString: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
     endDateString: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional()
+  }),
+
+  subcategoryParams: z.object({
+    id: uuidSchema
+  }),
+
+  createSubcategory: z.object({
+    name: z.string().min(1).max(200),
+    displayOrder: z.number().int().min(1),
+    cvjStageId: uuidSchema
+  }),
+
+  updateSubcategory: z.object({
+    name: z.string().min(1).max(200).optional(),
+    displayOrder: z.number().int().min(1).optional(),
+    cvjStageId: uuidSchema.optional()
   })
 };
