@@ -394,40 +394,35 @@ function MarketingKpiApp() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <h1 className="text-2xl font-bold text-gray-900">Marketing KPI Scorecard</h1>
-            <nav className="flex space-x-4">
-              <Button
-                variant={activeView === 'dashboard' ? 'default' : 'outline'}
-                onClick={() => setActiveView('dashboard')}
-              >
-                Dashboard
-              </Button>
-              <Button
-                variant={activeView === 'data-entry' ? 'default' : 'outline'}
-                onClick={() => setActiveView('data-entry')}
-              >
-                Data Entry
-              </Button>
-              <Button
-                variant={activeView === 'admin' ? 'default' : 'outline'}
-                onClick={() => setActiveView('admin')}
-              >
-                Administration
-              </Button>
-            </nav>
-          </div>
-        </div>
-      </header>
+    <div className="p-6">
+      {/* Navigation Tabs */}
+      <div className="mb-6">
+        <nav className="flex space-x-4">
+          <Button
+            variant={activeView === 'dashboard' ? 'default' : 'outline'}
+            onClick={() => setActiveView('dashboard')}
+          >
+            Dashboard
+          </Button>
+          <Button
+            variant={activeView === 'data-entry' ? 'default' : 'outline'}
+            onClick={() => setActiveView('data-entry')}
+          >
+            Data Entry
+          </Button>
+          <Button
+            variant={activeView === 'admin' ? 'default' : 'outline'}
+            onClick={() => setActiveView('admin')}
+          >
+            Administration
+          </Button>
+        </nav>
+      </div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div>
         {renderActiveView()}
-      </main>
+      </div>
 
       {/* KPI Modal */}
       <KpiModal
@@ -1118,13 +1113,6 @@ function KpiModal({ isOpen, onClose, onSubmit, kpiData, allCvjStages }: KpiModal
 }
 
 // === MAIN APP WRAPPER ===
-function AuthenticatedApp() {
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <MarketingKpiApp />
-    </div>
-  );
-}
 
 function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const [location] = useLocation();
@@ -1294,7 +1282,7 @@ function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
   );
 }
 
-const ProtectedApp = withAuth(AuthenticatedApp);
+const ProtectedKpiApp = withAuth(MarketingKpiApp);
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -1317,14 +1305,20 @@ function Router() {
       </Route>
 
       <Route path="/">
-        {isAuthenticated ? <ProtectedApp /> : <Redirect to="/login" />}
+        {isAuthenticated ? (
+          <AuthenticatedLayout>
+            <ProtectedKpiApp />
+          </AuthenticatedLayout>
+        ) : (
+          <Redirect to="/login" />
+        )}
       </Route>
 
       <Route>
         {isAuthenticated ? (
-          <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <AuthenticatedLayout>
             <NotFound />
-          </div>
+          </AuthenticatedLayout>
         ) : (
           <Redirect to="/login" />
         )}
