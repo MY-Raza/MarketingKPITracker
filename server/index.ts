@@ -1,146 +1,7 @@
 import express from "express";
 import { createServer } from "http";
 import { setupVite, serveStatic } from "./vite";
-
-// In-memory storage for immediate functionality
-class SimpleStorage {
-  data = {
-    cvjStages: [
-      {
-        id: "1", name: "Aware", displayOrder: 1, colorCode: "bg-blue-500",
-        subCategories: [
-          { 
-            id: "1", name: "SEO & Content Marketing", displayOrder: 1, stageId: "1",
-            kpis: [
-              { id: "kpi1", name: "Website Traffic", description: "Monthly website visitors", unitType: "number", defaultMonthlyTargetValue: 10000, isActive: true }
-            ]
-          },
-          { 
-            id: "2", name: "Social Media Marketing", displayOrder: 2, stageId: "1",
-            kpis: [
-              { id: "kpi2", name: "Email Open Rate", description: "Email campaign open rate", unitType: "percentage", defaultMonthlyTargetValue: 25, isActive: true }
-            ]
-          }
-        ]
-      },
-      {
-        id: "2", name: "Engage", displayOrder: 2, colorCode: "bg-green-500",
-        subCategories: [
-          { 
-            id: "3", name: "Email Marketing", displayOrder: 1, stageId: "2",
-            kpis: [
-              { id: "kpi3", name: "Lead Conversion Rate", description: "Percentage of leads that convert", unitType: "percentage", defaultMonthlyTargetValue: 15, isActive: true }
-            ]
-          },
-          { 
-            id: "4", name: "Content Engagement", displayOrder: 2, stageId: "2",
-            kpis: []
-          }
-        ]
-      },
-      {
-        id: "3", name: "Subscribe", displayOrder: 3, colorCode: "bg-yellow-500",
-        subCategories: [{ 
-          id: "5", name: "Lead Generation", displayOrder: 1, stageId: "3",
-          kpis: []
-        }]
-      },
-      {
-        id: "4", name: "Convert", displayOrder: 4, colorCode: "bg-orange-500",
-        subCategories: [{ 
-          id: "6", name: "Sales Conversion", displayOrder: 1, stageId: "4",
-          kpis: []
-        }]
-      },
-      {
-        id: "5", name: "Excite", displayOrder: 5, colorCode: "bg-red-500",
-        subCategories: [{ 
-          id: "7", name: "Customer Onboarding", displayOrder: 1, stageId: "5",
-          kpis: []
-        }]
-      },
-      {
-        id: "6", name: "Ascend", displayOrder: 6, colorCode: "bg-purple-500",
-        subCategories: [{ 
-          id: "8", name: "Upsell & Cross-sell", displayOrder: 1, stageId: "6",
-          kpis: []
-        }]
-      },
-      {
-        id: "7", name: "Advocate", displayOrder: 7, colorCode: "bg-indigo-500",
-        subCategories: [{ 
-          id: "9", name: "Customer Success", displayOrder: 1, stageId: "7",
-          kpis: []
-        }]
-      },
-      {
-        id: "8", name: "Promote", displayOrder: 8, colorCode: "bg-pink-500",
-        subCategories: [{ 
-          id: "10", name: "Referral Programs", displayOrder: 1, stageId: "8",
-          kpis: []
-        }]
-      }
-    ],
-    kpis: [
-      { id: "kpi1", name: "Website Traffic", description: "Monthly website visitors", unitType: "number", defaultMonthlyTargetValue: 10000, isActive: true },
-      { id: "kpi2", name: "Email Open Rate", description: "Email campaign open rate", unitType: "percentage", defaultMonthlyTargetValue: 25, isActive: true },
-      { id: "kpi3", name: "Lead Conversion Rate", description: "Percentage of leads that convert", unitType: "percentage", defaultMonthlyTargetValue: 15, isActive: true }
-    ],
-    weeks: [
-      { id: "week1", year: 2024, weekNumber: 20, month: 5, startDateString: "2024-05-13", endDateString: "2024-05-19" },
-      { id: "week2", year: 2024, weekNumber: 21, month: 5, startDateString: "2024-05-20", endDateString: "2024-05-26" },
-      { id: "week3", year: 2024, weekNumber: 22, month: 5, startDateString: "2024-05-27", endDateString: "2024-06-02" }
-    ],
-    monthlyTargets: [
-      { id: "target1", kpiId: "kpi1", monthId: "2024-05", targetValue: 10000 },
-      { id: "target2", kpiId: "kpi2", monthId: "2024-05", targetValue: 25 },
-      { id: "target3", kpiId: "kpi3", monthId: "2024-05", targetValue: 15 }
-    ]
-  };
-
-  async getCVJStages() { return this.data.cvjStages; }
-  async getKPIs() { return this.data.kpis; }
-  async getWeeks() { return this.data.weeks; }
-  async getMonthlyTargets() { return this.data.monthlyTargets; }
-  async getWeeklyDataEntries() { return []; }
-  async getSubCategories() {
-    return this.data.cvjStages.flatMap(stage => stage.subCategories);
-  }
-
-  async createSubCategory(data) {
-    const newId = String(Date.now());
-    const newSubCategory = { ...data, id: newId };
-    const stage = this.data.cvjStages.find(s => s.id === data.stageId);
-    if (stage) {
-      stage.subCategories.push(newSubCategory);
-    }
-    return newSubCategory;
-  }
-
-  async updateSubCategory(id, data) {
-    for (const stage of this.data.cvjStages) {
-      const subCat = stage.subCategories.find(sc => sc.id === id);
-      if (subCat) {
-        Object.assign(subCat, data);
-        return subCat;
-      }
-    }
-    throw new Error('Subcategory not found');
-  }
-
-  async deleteSubCategory(id) {
-    for (const stage of this.data.cvjStages) {
-      const index = stage.subCategories.findIndex(sc => sc.id === id);
-      if (index !== -1) {
-        stage.subCategories.splice(index, 1);
-        return;
-      }
-    }
-    throw new Error('Subcategory not found');
-  }
-}
-
-const storage = new SimpleStorage();
+import { storage } from "./storage-simple";
 
 const app = express();
 
@@ -148,10 +9,15 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Simple logging without complex middleware
+// CORS middleware for API requests
 app.use((req, res, next) => {
-  if (req.path.startsWith("/api")) {
-    console.log(`${req.method} ${req.path}`);
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+    return;
   }
   next();
 });
@@ -167,50 +33,10 @@ app.get("/api/cvj-stages", async (req, res) => {
   }
 });
 
-app.get("/api/subcategories", async (req, res) => {
-  try {
-    const subcategories = await storage.getSubCategories();
-    res.json({ success: true, data: subcategories });
-  } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
-  }
-});
-
-app.post("/api/subcategories", async (req, res) => {
-  try {
-    const subcategory = await storage.createSubCategory(req.body);
-    res.json({ success: true, data: subcategory });
-  } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
-  }
-});
-
-app.put("/api/subcategories/:id", async (req, res) => {
-  try {
-    const subcategory = await storage.updateSubCategory(req.params.id, req.body);
-    res.json({ success: true, data: subcategory });
-  } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
-  }
-});
-
-app.delete("/api/subcategories/:id", async (req, res) => {
-  try {
-    await storage.deleteSubCategory(req.params.id);
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
-  }
-});
-
 app.get("/api/kpis", async (req, res) => {
   try {
     const kpis = await storage.getKPIs();
-    res.json({ success: true, data: kpis });
+    res.json(kpis);
   } catch (error) {
     console.error('Error:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
@@ -233,6 +59,16 @@ app.get("/api/monthly-targets", async (req, res) => {
     res.json(targets);
   } catch (error) {
     console.error('Error:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+app.post("/api/monthly-targets", async (req, res) => {
+  try {
+    const newTarget = await storage.createMonthlyTarget(req.body);
+    res.status(201).json(newTarget);
+  } catch (error) {
+    console.error('Error creating monthly target:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
@@ -331,23 +167,21 @@ app.get("/api/auth/me", (req, res) => {
     success: true, 
     data: { 
       id: "test-user", 
-      username: "testuser",
+      username: "test",
       email: "test@example.com" 
     } 
   });
 });
 
-(async () => {
-  const server = createServer(app);
-  
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
-  }
+// Setup Vite in development
+if (process.env.NODE_ENV !== "production") {
+  setupVite(app);
+} else {
+  serveStatic(app);
+}
 
-  const port = 5000;
-  server.listen(port, "0.0.0.0", () => {
-    console.log(`serving on port ${port}`);
-  });
-})();
+const server = createServer(app);
+
+server.listen(5000, "0.0.0.0", () => {
+  console.log("serving on port 5000");
+});
