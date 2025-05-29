@@ -1,6 +1,6 @@
 import { db } from './db';
 import { cvjStages, subCategories, kpis, weeks, weeklyDataEntries, monthlyKpiTargets } from '@shared/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 // CVJ Stage data - matching the constants file
 const CVJ_STAGES_DATA = [
@@ -320,7 +320,10 @@ export async function seedDatabase() {
       const kpiId = kpiMap.get(dataEntry.kpiName);
       if (kpiId) {
         const existing = await db.select().from(weeklyDataEntries)
-          .where(eq(weeklyDataEntries.weekId, dataEntry.weekId));
+          .where(and(
+            eq(weeklyDataEntries.weekId, dataEntry.weekId),
+            eq(weeklyDataEntries.kpiId, kpiId)
+          ));
         
         if (existing.length === 0) {
           await db.insert(weeklyDataEntries).values({
@@ -339,8 +342,10 @@ export async function seedDatabase() {
       const kpiId = kpiMap.get(targetEntry.kpiName);
       if (kpiId) {
         const existing = await db.select().from(monthlyKpiTargets)
-          .where(eq(monthlyKpiTargets.kpiId, kpiId))
-          .where(eq(monthlyKpiTargets.monthId, targetEntry.monthId));
+          .where(and(
+            eq(monthlyKpiTargets.kpiId, kpiId),
+            eq(monthlyKpiTargets.monthId, targetEntry.monthId)
+          ));
         
         if (existing.length === 0) {
           await db.insert(monthlyKpiTargets).values({
