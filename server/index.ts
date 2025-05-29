@@ -101,25 +101,25 @@ app.get("/api/monthly-targets", async (req, res) => {
 // Simple auth endpoints for testing
 app.post("/api/auth/login", (req, res) => {
   // Accept any login for testing purposes
-  const { username, password } = req.body;
+  const { email, password } = req.body;
   
-  if (username && password) {
-    const token = "mock-jwt-token-for-testing";
+  if (email && password) {
+    const username = email.split('@')[0]; // Extract username from email
     res.json({ 
-      success: true, 
-      data: { 
-        token,
-        user: {
-          id: "test-user", 
-          username: username,
-          email: `${username}@example.com` 
-        }
-      } 
+      user: {
+        id: "test-user", 
+        username: username,
+        email: email 
+      },
+      tokens: {
+        accessToken: "mock-jwt-token-for-testing",
+        refreshToken: "mock-refresh-token-for-testing"
+      }
     });
   } else {
     res.status(400).json({ 
       success: false, 
-      message: "Username and password required" 
+      message: "Email and password required" 
     });
   }
 });
