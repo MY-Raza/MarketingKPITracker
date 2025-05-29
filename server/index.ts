@@ -98,7 +98,32 @@ app.get("/api/monthly-targets", async (req, res) => {
   }
 });
 
-// Bypass auth completely for testing
+// Simple auth endpoints for testing
+app.post("/api/auth/login", (req, res) => {
+  // Accept any login for testing purposes
+  const { username, password } = req.body;
+  
+  if (username && password) {
+    const token = "mock-jwt-token-for-testing";
+    res.json({ 
+      success: true, 
+      data: { 
+        token,
+        user: {
+          id: "test-user", 
+          username: username,
+          email: `${username}@example.com` 
+        }
+      } 
+    });
+  } else {
+    res.status(400).json({ 
+      success: false, 
+      message: "Username and password required" 
+    });
+  }
+});
+
 app.get("/api/auth/me", (req, res) => {
   res.json({ 
     success: true, 
