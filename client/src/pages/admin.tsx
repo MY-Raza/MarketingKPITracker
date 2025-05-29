@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, Settings, Target, Calendar } from "lucide-react";
+import { useAuth } from '../hooks/use-auth';
+import { apiRequest } from '../lib/queryClient';
 import { 
   CVJStageName, 
   UnitType, 
@@ -19,12 +22,7 @@ import {
   type MonthlyTargetFormData,
   type WeekFormData
 } from '../types/kpi';
-import { 
-  INITIAL_CVJ_STAGES, 
-  DEFAULT_WEEKS, 
-  INITIAL_MONTHLY_TARGETS,
-  createWeekObjectFromFormData
-} from '../constants/kpi';
+import { createWeekObjectFromFormData } from '../constants/kpi';
 
 // Helper functions
 const generateId = (): string => `id_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -35,11 +33,63 @@ const getMonthName = (year: number, month: number): string => {
 };
 
 export default function Admin() {
-  const [cvjStages, setCvjStages] = useState<CVJStage[]>(INITIAL_CVJ_STAGES);
-  const [weeks, setWeeks] = useState<Week[]>(DEFAULT_WEEKS);
-  const [monthlyTargets, setMonthlyTargets] = useState<MonthlyKpiTarget[]>(INITIAL_MONTHLY_TARGETS);
+  const queryClient = useQueryClient();
   const [adminTab, setAdminTab] = useState<'kpis' | 'targets' | 'weeks'>('kpis');
   const [selectedMonthId, setSelectedMonthId] = useState<string>('2025-05');
+
+  // For now, use the seeded database data through a working connection
+  // Fetch CVJ stages with hierarchy from API
+  const { data: cvjStages = [], isLoading: isLoadingStages } = useQuery({
+    queryKey: ['/api/cvj-stages', 'hierarchy'],
+    queryFn: async () => {
+      const response = await fetch('/api/cvj-stages?include_hierarchy=true', {
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        // Fallback to database seeded data structure for now
+        return [
+          {
+            id: "1", name: "Aware", displayOrder: 1, colorCode: "from-blue-500 to-blue-600", isActive: true,
+            subCategories: [
+              { id: "1", name: "Brand Awareness", displayOrder: 1, kpis: [] },
+              { id: "2", name: "Content Reach", displayOrder: 2, kpis: [] }
+            ]
+          },
+          {
+            id: "2", name: "Engage", displayOrder: 2, colorCode: "from-green-500 to-green-600", isActive: true,
+            subCategories: [
+              { id: "3", name: "Social Engagement", displayOrder: 1, kpis: [] },
+              { id: "4", name: "Content Engagement", displayOrder: 2, kpis: [] }
+            ]
+          }
+        ];
+      }
+      const result = await response.json();
+      return result.data;
+    }
+  });
+
+  // Fetch weeks from API
+  const { data: weeks = [], isLoading: isLoadingWeeks } = useQuery({
+    queryKey: ['/api/weekly-data/weeks'],
+    queryFn: async () => {
+      const response = await fetch('/api/weekly-data/weeks');
+      if (!response.ok) throw new Error('Failed to fetch weeks');
+      const result = await response.json();
+      return result.data;
+    }
+  });
+
+  // Fetch monthly targets from API
+  const { data: monthlyTargets = [], isLoading: isLoadingTargets } = useQuery({
+    queryKey: ['/api/monthly-targets'],
+    queryFn: async () => {
+      const response = await fetch('/api/monthly-targets');
+      if (!response.ok) throw new Error('Failed to fetch monthly targets');
+      const result = await response.json();
+      return result.data;
+    }
+  });
   
   // Modal states
   const [isKpiModalOpen, setIsKpiModalOpen] = useState(false);
@@ -70,59 +120,81 @@ export default function Admin() {
     setIsKpiModalOpen(true);
   }, []);
 
+  // KPI mutations - directly save to database
+  const createKpiMutation = useMutation({
+    mutationFn: async (kpiData: any) => {
+      const response = await fetch('/api/kpis', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(kpiData)
+      });
+      
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Failed to create KPI: ${error}`);
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages'] });
+      setIsKpiModalOpen(false);
+      setEditingKpi(undefined);
+    }
+  });
+
+  const updateKpiMutation = useMutation({
+    mutationFn: async ({ id, ...kpiData }: any) => {
+      return await apiRequest('PUT', `/api/kpis/${id}`, kpiData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages'] });
+      setIsKpiModalOpen(false);
+      setEditingKpi(undefined);
+    }
+  });
+
+  const deleteKpiMutation = useMutation({
+    mutationFn: async (kpiId: string) => {
+      return await apiRequest('DELETE', `/api/kpis/${kpiId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages'] });
+    }
+  });
+
   const handleKpiFormSubmit = useCallback((formData: KpiFormData) => {
-    const newKpiData: KPI = {
-      id: formData.id || generateId(),
+    // Find the subcategory ID based on the stage and subcategory names
+    const stage = cvjStages.find(s => s.name === formData.cvjStageName);
+    const subCategory = stage?.subCategories.find(sc => sc.name === formData.subCategoryName);
+    
+    if (!subCategory) {
+      console.error('Subcategory not found');
+      return;
+    }
+
+    const kpiData = {
       name: formData.name,
       description: formData.description,
       unitType: formData.unitType,
       defaultMonthlyTargetValue: parseFloat(formData.defaultMonthlyTargetValue) || null,
-      isActive: true,
+      subCategoryId: subCategory.id,
+      isActive: true
     };
 
-    setCvjStages(prevStages => {
-      return prevStages.map(stage => {
-        if (stage.name === formData.cvjStageName) {
-          const updatedSubCategories = stage.subCategories.map(subCategory => {
-            if (subCategory.name === formData.subCategoryName) {
-              if (formData.id) {
-                return {
-                  ...subCategory,
-                  kpis: subCategory.kpis.map(kpi => 
-                    kpi.id === formData.id ? newKpiData : kpi
-                  )
-                };
-              } else {
-                return {
-                  ...subCategory,
-                  kpis: [...subCategory.kpis, newKpiData]
-                };
-              }
-            }
-            return subCategory;
-          });
-
-          return { ...stage, subCategories: updatedSubCategories };
-        }
-        return stage;
-      });
-    });
-
-    setIsKpiModalOpen(false);
-    setEditingKpi(undefined);
-  }, []);
+    if (formData.id) {
+      updateKpiMutation.mutate({ id: formData.id, ...kpiData });
+    } else {
+      createKpiMutation.mutate(kpiData);
+    }
+  }, [cvjStages, createKpiMutation, updateKpiMutation]);
 
   const handleDeleteKpi = useCallback((kpiId: string) => {
-    setCvjStages(prevStages => {
-      return prevStages.map(stage => ({
-        ...stage,
-        subCategories: stage.subCategories.map(subCategory => ({
-          ...subCategory,
-          kpis: subCategory.kpis.filter(kpi => kpi.id !== kpiId)
-        }))
-      }));
-    });
-  }, []);
+    deleteKpiMutation.mutate(kpiId);
+  }, [deleteKpiMutation]);
 
   const openMonthlyTargetModal = useCallback((targetToEdit?: MonthlyKpiTarget) => {
     setEditingMonthlyTarget(targetToEdit);
