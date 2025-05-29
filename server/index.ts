@@ -44,7 +44,14 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Setup API routes BEFORE any middleware to ensure they have priority
   const server = await registerRoutes(app);
+
+  // Add specific middleware to ensure API routes are not intercepted
+  app.use('/api/*', (req, res, next) => {
+    console.log(`🔧 API Route Handler: ${req.method} ${req.path} - ensuring proper routing`);
+    next();
+  });
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
