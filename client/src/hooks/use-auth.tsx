@@ -124,12 +124,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (data: RegisterData): Promise<void> => {
     setIsLoading(true);
     try {
-      const response = await apiClient.post('/api/auth/register', data);
+      console.log("Starting registration with data:", data);
+      const response = await apiClient.register(data);
+      console.log("Registration response:", response);
 
       const { user, tokens } = response;
       saveAuthData(user, tokens);
       setLocation('/dashboard');
     } catch (error: any) {
+      console.error("Registration error in hook:", error);
       throw new Error(error.message || 'Failed to register');
     } finally {
       setIsLoading(false);
