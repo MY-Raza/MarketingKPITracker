@@ -326,6 +326,18 @@ export default function Admin() {
             <Calendar className="w-4 h-4 mr-2" />
             Manage Weeks
           </Button>
+          <Button
+            variant="ghost"
+            onClick={() => setAdminTab('subcategories')}
+            className={`flex-1 ${
+              adminTab === 'subcategories' 
+                ? 'bg-white shadow-sm text-slate-900 hover:bg-blue-500 hover:text-white' 
+                : 'text-slate-600 hover:bg-blue-500 hover:text-white'
+            }`}
+          >
+            <Settings className="w-4 h-4 mr-2" />
+            Subcategories
+          </Button>
         </div>
 
         {/* KPIs Management */}
@@ -610,6 +622,67 @@ export default function Admin() {
                 </div>
               </CardContent>
             </Card>
+          </div>
+        )}
+
+        {/* Subcategory Management */}
+        {adminTab === 'subcategories' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-semibold text-slate-900">Subcategory Management</h2>
+              <p className="text-slate-600">Manage subcategories within each CVJ stage</p>
+            </div>
+
+            {cvjStages.map(stage => (
+              <Card key={stage.id} className="overflow-hidden border-0 shadow-lg">
+                <CardHeader className={`bg-gradient-to-r ${stageColorMap[stage.name]} text-white`}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-xl font-bold">{stage.name} Stage</CardTitle>
+                      <p className="text-blue-100 mt-1">Subcategories for {stage.name}</p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="bg-white text-slate-700 hover:bg-slate-50"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Subcategory
+                    </Button>
+                  </div>
+                </CardHeader>
+
+                <CardContent className="p-6">
+                  <div className="space-y-4">
+                    {stage.subCategories.map(subCategory => (
+                      <div key={subCategory.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                        <div className="flex-1">
+                          <h4 className="font-medium text-slate-900">{subCategory.name}</h4>
+                          <p className="text-sm text-slate-600">Display Order: {subCategory.displayOrder}</p>
+                          <p className="text-sm text-slate-500 mt-1">
+                            {subCategory.kpis.length} KPI{subCategory.kpis.length !== 1 ? 's' : ''}
+                          </p>
+                        </div>
+                        <div className="flex space-x-2">
+                          <Button variant="outline" size="sm">
+                            <Edit className="w-3 h-3" />
+                          </Button>
+                          <Button variant="destructive" size="sm">
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {stage.subCategories.length === 0 && (
+                      <div className="text-center py-8 text-slate-500">
+                        No subcategories yet. Add one to get started.
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         )}
       </div>
