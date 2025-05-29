@@ -219,9 +219,19 @@ export default function Admin() {
   });
 
   const deleteWeekMutation = useMutation({
-    mutationFn: (weekId: string) => apiClient.deleteWeek(weekId),
+    mutationFn: async (weekId: string) => {
+      console.log(`Frontend: Attempting to delete week with ID: "${weekId}"`);
+      const result = await apiClient.deleteWeek(weekId);
+      console.log('Frontend: Delete request completed', result);
+      return result;
+    },
     onSuccess: () => {
+      console.log('Frontend: Delete mutation successful, invalidating queries');
       queryClient.invalidateQueries({ queryKey: ['/api/analytics/weeks'] });
+      queryClient.refetchQueries({ queryKey: ['/api/analytics/weeks'] });
+    },
+    onError: (error) => {
+      console.error('Frontend: Delete mutation failed', error);
     }
   });
 
