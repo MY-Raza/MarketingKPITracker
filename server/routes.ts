@@ -25,11 +25,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // Direct deletion endpoint bypassing all middleware conflicts
-  app.delete("/api/delete-week/:id", async (req, res) => {
+  // Try a POST-based deletion with a different path structure
+  app.post("/api/admin/delete-week", async (req, res) => {
     try {
-      console.log(`=== DIRECT DELETE ENDPOINT HIT ===`);
-      console.log(`Direct delete request for week ID: "${req.params.id}"`);
+      console.log(`=== ADMIN DELETE ENDPOINT HIT ===`);
+      const weekId = req.body.weekId;
+      console.log(`Admin delete request for week ID: "${weekId}"`);
+      
+      if (!weekId) {
+        return res.status(400).json({ success: false, message: "Week ID is required" });
+      }
       
       // Import database directly
       const { db } = await import('./db');
@@ -37,7 +42,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { eq } = await import('drizzle-orm');
       
       console.log(`Executing direct database deletion...`);
-      const result = await db.delete(weeks).where(eq(weeks.id, req.params.id));
+      const result = await db.delete(weeks).where(eq(weeks.id, weekId));
       console.log(`Direct deletion result:`, result);
       
       res.json({ success: true, message: "Week deleted successfully" });
