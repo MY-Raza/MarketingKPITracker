@@ -1,7 +1,22 @@
 import express from "express";
 import { createServer } from "http";
-import { storage } from "./storage-simple";
 import { setupVite, serveStatic } from "./vite";
+
+let storage: any;
+
+async function initializeStorage() {
+  try {
+    // Try to use the database storage first
+    const { storage: dbStorage } = await import("./storage-simple");
+    await dbStorage.getCVJStages(); // Test the connection
+    storage = dbStorage;
+    console.log("Database connection successful");
+  } catch (error) {
+    console.error("Database connection failed:", error);
+    console.log("The database appears to be unavailable. Please check your DATABASE_URL configuration or contact support.");
+    throw new Error("Database connection failed. Please verify your database configuration.");
+  }
+}
 
 const app = express();
 
