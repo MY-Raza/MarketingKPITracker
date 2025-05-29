@@ -11,9 +11,14 @@ import {
 import { eq } from "drizzle-orm";
 
 export interface IStorage {
+  // Dashboard Data
+  getDashboardDataForMonth(monthId: string): Promise<any>;
+  
   // CVJ Stages
   getCVJStages(): Promise<any[]>;
   getCVJStageById(id: string): Promise<any | undefined>;
+  getSubCategoriesByStageId(stageId: string): Promise<any[]>;
+  getCvjStages(): Promise<any[]>;
   
   // Sub Categories
   getSubCategories(): Promise<any[]>;
@@ -50,15 +55,36 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  // Dashboard Data
+  async getDashboardDataForMonth(monthId: string): Promise<any> {
+    // Return basic dashboard structure
+    return {
+      monthId,
+      cvjStages: await this.getCVJStages(),
+      kpis: await this.getKPIs(),
+      weeklyData: await this.getWeeklyDataEntries(),
+      monthlyTargets: await this.getMonthlyTargets()
+    };
+  }
+
   // CVJ Stages
   async getCVJStages(): Promise<any[]> {
     const result = await db.select().from(cvjStages);
     return result;
   }
 
+  async getCvjStages(): Promise<any[]> {
+    return await this.getCVJStages();
+  }
+
   async getCVJStageById(id: string): Promise<any | undefined> {
     const result = await db.select().from(cvjStages).where(eq(cvjStages.id, id));
     return result[0] || undefined;
+  }
+
+  async getSubCategoriesByStageId(stageId: string): Promise<any[]> {
+    const result = await db.select().from(subCategories).where(eq(subCategories.cvjStageId, stageId));
+    return result;
   }
 
   // Sub Categories
