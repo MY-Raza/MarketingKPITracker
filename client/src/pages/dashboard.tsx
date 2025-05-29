@@ -16,13 +16,7 @@ import {
   type MonthlyKpiTarget, 
   type ProcessedKpiMonthlyData 
 } from '../types/kpi';
-import { 
-  STATUS_THRESHOLDS,
-  INITIAL_CVJ_STAGES, 
-  DEFAULT_WEEKS, 
-  INITIAL_WEEKLY_DATA, 
-  INITIAL_MONTHLY_TARGETS
-} from '../constants/kpi';
+import { STATUS_THRESHOLDS } from '../constants/kpi';
 
 // Helper functions
 const getMonthId = (year: number, month: number): string => `${year}-${month.toString().padStart(2, '0')}`;
@@ -72,11 +66,25 @@ function KpiStatusGauge({ value, target, title }: { value: number; target: numbe
 }
 
 export default function Dashboard() {
-  // Use stored data from database instead of mock data
-  const [cvjStages] = useState<CVJStage[]>(INITIAL_CVJ_STAGES);
-  const [weeks] = useState<Week[]>(DEFAULT_WEEKS);
-  const [weeklyData] = useState<WeeklyDataEntry[]>(INITIAL_WEEKLY_DATA);
-  const [monthlyTargets] = useState<MonthlyKpiTarget[]>(INITIAL_MONTHLY_TARGETS);
+  // Fetch all data from backend
+  const { data: cvjStages = [], isLoading: isLoadingStages } = useQuery<CVJStage[]>({
+    queryKey: ['/api/cvj-stages'],
+  });
+
+  const { data: weeks = [], isLoading: isLoadingWeeks } = useQuery<Week[]>({
+    queryKey: ['/api/analytics/weeks'],
+  });
+
+  const { data: weeklyData = [], isLoading: isLoadingWeeklyData } = useQuery<WeeklyDataEntry[]>({
+    queryKey: ['/api/weekly-data'],
+  });
+
+  const { data: monthlyTargets = [], isLoading: isLoadingTargets } = useQuery<MonthlyKpiTarget[]>({
+    queryKey: ['/api/monthly-targets'],
+  });
+
+  // Show loading state while any data is being fetched
+  const isLoading = isLoadingStages || isLoadingWeeks || isLoadingWeeklyData || isLoadingTargets;
 
   const uniqueMonths = useMemo(() => {
     const monthSet = new Set<string>();
@@ -210,7 +218,21 @@ export default function Dashboard() {
     }
   };
 
-
+  // Show loading state while data is being fetched
+  if (isLoading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="space-y-8">
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-4 text-lg text-slate-600">Loading dashboard data...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
