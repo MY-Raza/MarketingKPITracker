@@ -11,6 +11,13 @@ app.use((req, res, next) => {
   const path = req.path;
   let capturedJsonResponse: Record<string, any> | undefined = undefined;
 
+  // Debug DELETE requests specifically
+  if (req.method === 'DELETE' && path.includes('/api/analytics/weeks/')) {
+    console.log(`🔍 MIDDLEWARE: DELETE request intercepted - ${req.method} ${path}`);
+    console.log(`🔍 Full URL: ${req.url}`);
+    console.log(`🔍 Params:`, req.params);
+  }
+
   const originalResJson = res.json;
   res.json = function (bodyJson, ...args) {
     capturedJsonResponse = bodyJson;
