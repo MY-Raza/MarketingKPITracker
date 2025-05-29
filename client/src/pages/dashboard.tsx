@@ -1,9 +1,11 @@
 import React, { useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Info, TrendingUp, TrendingDown, Target, BarChart3 } from "lucide-react";
+import { useAuth } from '../hooks/use-auth';
 import { 
   CVJStageName, 
   UnitType, 
@@ -15,11 +17,11 @@ import {
   type ProcessedKpiMonthlyData 
 } from '../types/kpi';
 import { 
+  STATUS_THRESHOLDS,
   INITIAL_CVJ_STAGES, 
   DEFAULT_WEEKS, 
   INITIAL_WEEKLY_DATA, 
-  INITIAL_MONTHLY_TARGETS,
-  STATUS_THRESHOLDS
+  INITIAL_MONTHLY_TARGETS
 } from '../constants/kpi';
 
 // Helper functions
@@ -70,10 +72,29 @@ function KpiStatusGauge({ value, target, title }: { value: number; target: numbe
 }
 
 export default function Dashboard() {
-  const [cvjStages] = useState<CVJStage[]>(INITIAL_CVJ_STAGES);
-  const [weeks] = useState<Week[]>(DEFAULT_WEEKS);
-  const [weeklyData] = useState<WeeklyDataEntry[]>(INITIAL_WEEKLY_DATA);
-  const [monthlyTargets] = useState<MonthlyKpiTarget[]>(INITIAL_MONTHLY_TARGETS);
+  const { token } = useAuth();
+
+  // Fetch CVJ stages with hierarchy from API with authentication
+  const { data: cvjStages = INITIAL_CVJ_STAGES, isLoading: isLoadingStages } = useQuery({
+    queryKey: ['/api/cvj-stages', 'hierarchy'],
+    queryFn: async () => {
+      const response = await fetch('/api/cvj-stages?include_hierarchy=true', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (!response.ok) throw new Error('Failed to fetch CVJ stages');
+      const result = await response.json();
+      return result.data;
+    },
+    enabled: !!token
+  });
+
+  // For now, use mock data for other endpoints while we complete the integration
+  const weeks = DEFAULT_WEEKS;
+  const weeklyData = INITIAL_WEEKLY_DATA;
+  const monthlyTargets = INITIAL_MONTHLY_TARGETS;
 
   const uniqueMonths = useMemo(() => {
     const monthSet = new Set<string>();
@@ -206,6 +227,8 @@ export default function Dashboard() {
         return value.toLocaleString();
     }
   };
+
+
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
