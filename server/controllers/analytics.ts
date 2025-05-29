@@ -208,25 +208,30 @@ router.put(
   })
 );
 
-// Delete week using POST method to avoid routing conflicts
-router.post(
-  "/weeks/:id/delete",
+// Direct deletion endpoint using PATCH method
+router.patch(
+  "/weeks/:id/remove",
   authenticateToken,
   validateParams(analyticsValidators.weekParams),
   asyncHandler(async (req: Request, res: Response) => {
-    console.log(`POST DELETE request received for week ID: "${req.params.id}"`);
-    const existingWeek = await storage.getWeekById(req.params.id);
-    console.log(`Found existing week:`, existingWeek);
+    console.log(`=== PATCH DELETE ENDPOINT HIT ===`);
+    console.log(`PATCH DELETE request received for week ID: "${req.params.id}"`);
     
-    if (!existingWeek) {
-      console.log("Week not found, throwing 404 error");
-      throw new ApiError("Week not found", 404);
+    // Direct database deletion to bypass any storage layer issues
+    const { db } = await import('../db');
+    const { weeks } = await import('../../shared/schema');
+    const { eq } = await import('drizzle-orm');
+    
+    try {
+      console.log(`Direct database deletion for week: "${req.params.id}"`);
+      const result = await db.delete(weeks).where(eq(weeks.id, req.params.id));
+      console.log(`Database deletion result:`, result);
+      
+      res.json(successResponse(null, "Week deleted successfully"));
+    } catch (error) {
+      console.error(`Database deletion error:`, error);
+      throw new ApiError("Failed to delete week", 500);
     }
-
-    console.log(`Calling storage.deleteWeek with ID: "${req.params.id}"`);
-    await storage.deleteWeek(req.params.id);
-    console.log("Delete operation completed");
-    res.json(successResponse(null, "Week deleted successfully"));
   })
 );
 
