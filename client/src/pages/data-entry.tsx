@@ -4,8 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Info } from "lucide-react";
+import { Info, Calendar, Database } from "lucide-react";
 import { 
+  CVJStageName,
   type Week, 
   type WeeklyDataEntry, 
   type CVJStage, 
@@ -16,6 +17,11 @@ import {
   DEFAULT_WEEKS, 
   INITIAL_WEEKLY_DATA 
 } from '../constants/kpi';
+
+const getMonthName = (year: number, month: number): string => {
+  const date = new Date(year, month - 1, 1);
+  return date.toLocaleString('default', { month: 'long', year: 'numeric' });
+};
 
 export default function DataEntry() {
   const [cvjStages] = useState<CVJStage[]>(INITIAL_CVJ_STAGES);
@@ -51,87 +57,167 @@ export default function DataEntry() {
     });
   }, [selectedWeekId]);
 
+  const stageColorMap: Record<CVJStageName, string> = {
+    [CVJStageName.AWARE]: 'from-blue-500 to-blue-600',
+    [CVJStageName.ENGAGE]: 'from-green-500 to-green-600',
+    [CVJStageName.SUBSCRIBE]: 'from-purple-500 to-purple-600',
+    [CVJStageName.CONVERT]: 'from-orange-500 to-orange-600',
+    [CVJStageName.EXCITE]: 'from-pink-500 to-pink-600',
+    [CVJStageName.ASCEND]: 'from-indigo-500 to-indigo-600',
+    [CVJStageName.ADVOCATE]: 'from-emerald-500 to-emerald-600',
+    [CVJStageName.PROMOTE]: 'from-red-500 to-red-600',
+  };
+
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-gray-900">Weekly Data Entry</h2>
-        <div className="w-64">
-          <Select value={selectedWeekId} onValueChange={setSelectedWeekId}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select week" />
-            </SelectTrigger>
-            <SelectContent>
-              {weeks.map(week => (
-                <SelectItem key={week.id} value={week.id}>
-                  {week.id}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="space-y-8">
+        {/* Header */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">Weekly Data Entry</h1>
+            <p className="text-slate-600 mt-1">Enter actual performance data for KPIs across all customer journey stages</p>
+          </div>
+          <div className="flex items-center space-x-3">
+            <Database className="h-5 w-5 text-slate-500" />
+            <div className="w-72">
+              <Select value={selectedWeekId} onValueChange={setSelectedWeekId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select week for data entry" />
+                </SelectTrigger>
+                <SelectContent>
+                  {weeks.map(week => (
+                    <SelectItem key={week.id} value={week.id}>
+                      {week.id}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </div>
-      </div>
 
-      {selectedWeek && (
-        <Card>
-          <CardHeader className="bg-blue-50 border-b">
-            <CardTitle className="text-blue-900">
-              {selectedWeek.id}
-            </CardTitle>
-            <p className="text-sm text-blue-700">
-              {selectedWeek.startDateString} to {selectedWeek.endDateString}
-            </p>
-          </CardHeader>
-
-          <CardContent className="p-6">
-            {cvjStages.map(stage => (
-              <div key={stage.id} className="mb-8">
-                <div className={`p-3 ${stage.colorCode} text-white rounded-lg mb-4`}>
-                  <h4 className="font-semibold">{stage.name}</h4>
-                </div>
-
-                {stage.subCategories.map(subCategory => (
-                  <div key={subCategory.id} className="mb-6">
-                    <h5 className="font-medium text-gray-900 mb-3">{subCategory.name}</h5>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {subCategory.kpis.map(kpi => {
-                        const existingEntry = weeklyData.find(
-                          entry => entry.weekId === selectedWeekId && entry.kpiId === kpi.id
-                        );
-
-                        return (
-                          <div key={kpi.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded">
-                            <div className="flex-1">
-                              <Label className="block text-sm font-medium text-gray-700 mb-1">
-                                {kpi.name}
-                              </Label>
-                              <Input
-                                type="number"
-                                step="0.01"
-                                value={existingEntry?.actualValue?.toString() || ''}
-                                onChange={(e) => handleDataChange(kpi.id, e.target.value)}
-                                placeholder="Enter value"
-                              />
-                            </div>
-                            <Tooltip>
-                              <TooltipTrigger>
-                                <Info className="w-4 h-4 text-gray-400" />
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>{kpi.description}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </div>
-                        );
-                      })}
-                    </div>
+        {selectedWeek && (
+          <>
+            {/* Week Info Card */}
+            <Card className="bg-gradient-to-br from-indigo-50 to-blue-100 border-indigo-200">
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4">
+                  <Calendar className="h-8 w-8 text-indigo-600" />
+                  <div>
+                    <h2 className="text-xl font-semibold text-slate-900">
+                      Entering data for: {selectedWeek.id}
+                    </h2>
+                    <p className="text-slate-600">
+                      {selectedWeek.startDateString} to {selectedWeek.endDateString} • Month: {getMonthName(selectedWeek.year, selectedWeek.month)}
+                    </p>
                   </div>
-                ))}
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Data Entry Forms by Stage */}
+            <div className="space-y-6">
+              <h2 className="text-2xl font-semibold text-slate-900">Customer Value Journey Data Entry</h2>
+              
+              {cvjStages.map(stage => (
+                <Card key={stage.id} className="overflow-hidden border-0 shadow-lg">
+                  <CardHeader className={`bg-gradient-to-r ${stageColorMap[stage.name]} text-white`}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="text-xl font-bold">{stage.name} Stage</CardTitle>
+                        <p className="text-blue-100 mt-1">Enter weekly performance data for {stage.name} metrics</p>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm opacity-90">KPIs</div>
+                        <div className="text-2xl font-bold">
+                          {stage.subCategories.reduce((count, sub) => count + sub.kpis.length, 0)}
+                        </div>
+                      </div>
+                    </div>
+                  </CardHeader>
+
+                  <CardContent className="p-6">
+                    {stage.subCategories.map(subCategory => (
+                      <div key={subCategory.id} className="mb-8">
+                        <div className="mb-4">
+                          <h4 className="text-lg font-semibold text-slate-900 mb-2">{subCategory.name}</h4>
+                          <p className="text-sm text-slate-600">Enter actual values for {subCategory.name} KPIs</p>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {subCategory.kpis.map(kpi => {
+                            const existingEntry = weeklyData.find(
+                              entry => entry.weekId === selectedWeekId && entry.kpiId === kpi.id
+                            );
+
+                            return (
+                              <div key={kpi.id} className="group">
+                                <div className="bg-white border border-slate-200 rounded-xl p-4 hover:border-slate-300 hover:shadow-md transition-all duration-200">
+                                  <div className="flex items-start space-x-3">
+                                    <div className="flex-1">
+                                      <div className="flex items-center space-x-2 mb-2">
+                                        <Label className="text-sm font-semibold text-slate-900">
+                                          {kpi.name}
+                                        </Label>
+                                        <Tooltip>
+                                          <TooltipTrigger>
+                                            <Info className="w-4 h-4 text-slate-400 hover:text-slate-600" />
+                                          </TooltipTrigger>
+                                          <TooltipContent className="max-w-xs">
+                                            <p className="text-sm">{kpi.description}</p>
+                                            <p className="text-xs text-slate-500 mt-1">Unit: {kpi.unitType.replace('_', ' ')}</p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </div>
+                                      
+                                      <Input
+                                        type="number"
+                                        step="0.01"
+                                        value={existingEntry?.actualValue?.toString() || ''}
+                                        onChange={(e) => handleDataChange(kpi.id, e.target.value)}
+                                        placeholder={`Actual (${kpi.unitType.replace('_', ' ')})`}
+                                        className="w-full"
+                                      />
+                                      
+                                      {kpi.description && (
+                                        <p className="text-xs text-slate-500 mt-2">{kpi.description}</p>
+                                      )}
+                                      
+                                      {kpi.defaultMonthlyTargetValue && (
+                                        <p className="text-xs text-slate-600 mt-1">
+                                          Monthly Target: {kpi.defaultMonthlyTargetValue.toLocaleString()}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Save Notice */}
+            <Card className="bg-gradient-to-br from-green-50 to-emerald-100 border-green-200">
+              <CardContent className="p-4">
+                <div className="flex items-center space-x-3">
+                  <div className="flex-shrink-0">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  </div>
+                  <p className="text-sm text-green-800">
+                    <strong>Auto-save enabled:</strong> Your data changes are automatically saved as you type.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
+      </div>
     </div>
   );
 }

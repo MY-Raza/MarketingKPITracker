@@ -54,12 +54,12 @@ function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
       icon: Database,
       description: 'Weekly Data Input'
     },
-    ...(user?.role === 'ADMIN' ? [{ 
+    { 
       name: 'Administration', 
       href: '/admin', 
       icon: Settings,
       description: 'Manage KPIs & Targets'
-    }] : []),
+    },
   ];
 
   const isActiveRoute = (href: string) => {
@@ -153,11 +153,9 @@ function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
               </p>
               <p className="text-xs text-slate-300 truncate">{user?.email}</p>
             </div>
-            {user?.role === 'ADMIN' && (
-              <Badge className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-xs border-0">
-                Admin
-              </Badge>
-            )}
+            <Badge className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-xs border-0">
+              Admin
+            </Badge>
           </div>
         </div>
       </div>
@@ -209,11 +207,9 @@ function Header({ onMenuClick }: { onMenuClick: () => void }) {
                 <p className="text-sm text-slate-600 truncate">
                   {user?.email}
                 </p>
-                {user?.role === 'ADMIN' && (
-                  <Badge className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-xs border-0 w-fit">
-                    Administrator
-                  </Badge>
-                )}
+                <Badge className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-xs border-0 w-fit">
+                  Administrator
+                </Badge>
               </div>
             </div>
             <DropdownMenuSeparator />
