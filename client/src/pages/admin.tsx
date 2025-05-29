@@ -216,25 +216,37 @@ export default function Admin() {
         {/* Tab Navigation */}
         <div className="flex space-x-1 bg-slate-100 p-1 rounded-xl">
           <Button
-            variant={adminTab === 'kpis' ? 'default' : 'ghost'}
+            variant="ghost"
             onClick={() => setAdminTab('kpis')}
-            className={`flex-1 ${adminTab === 'kpis' ? 'bg-white shadow-sm' : ''}`}
+            className={`flex-1 ${
+              adminTab === 'kpis' 
+                ? 'bg-white shadow-sm text-slate-900 hover:bg-blue-500 hover:text-white' 
+                : 'text-slate-600 hover:bg-blue-500 hover:text-white'
+            }`}
           >
             <Settings className="w-4 h-4 mr-2" />
             Manage KPIs
           </Button>
           <Button
-            variant={adminTab === 'targets' ? 'default' : 'ghost'}
+            variant="ghost"
             onClick={() => setAdminTab('targets')}
-            className={`flex-1 ${adminTab === 'targets' ? 'bg-white shadow-sm' : ''}`}
+            className={`flex-1 ${
+              adminTab === 'targets' 
+                ? 'bg-white shadow-sm text-slate-900 hover:bg-blue-500 hover:text-white' 
+                : 'text-slate-600 hover:bg-blue-500 hover:text-white'
+            }`}
           >
             <Target className="w-4 h-4 mr-2" />
             Monthly Targets
           </Button>
           <Button
-            variant={adminTab === 'weeks' ? 'default' : 'ghost'}
+            variant="ghost"
             onClick={() => setAdminTab('weeks')}
-            className={`flex-1 ${adminTab === 'weeks' ? 'bg-white shadow-sm' : ''}`}
+            className={`flex-1 ${
+              adminTab === 'weeks' 
+                ? 'bg-white shadow-sm text-slate-900 hover:bg-blue-500 hover:text-white' 
+                : 'text-slate-600 hover:bg-blue-500 hover:text-white'
+            }`}
           >
             <Calendar className="w-4 h-4 mr-2" />
             Manage Weeks
@@ -527,8 +539,333 @@ export default function Admin() {
         )}
       </div>
 
-      {/* Modals would go here - KPI Modal, Monthly Target Modal, Week Modal */}
-      {/* For brevity, I'm not including the full modal implementations, but they would follow the same pattern */}
+      {/* KPI Modal */}
+      <Dialog open={isKpiModalOpen} onOpenChange={setIsKpiModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editingKpi ? 'Edit KPI' : 'Add New KPI'}</DialogTitle>
+          </DialogHeader>
+          <KpiForm
+            initialData={editingKpi ? {
+              id: editingKpi.id,
+              name: editingKpi.name,
+              description: editingKpi.description,
+              unitType: editingKpi.unitType,
+              defaultMonthlyTargetValue: editingKpi.defaultMonthlyTargetValue?.toString() || '',
+              subCategoryName: defaultSubCategoryName,
+              cvjStageName: defaultCvjStageName
+            } : {
+              id: undefined,
+              name: '',
+              description: '',
+              unitType: UnitType.NUMBER,
+              defaultMonthlyTargetValue: '',
+              subCategoryName: defaultSubCategoryName,
+              cvjStageName: defaultCvjStageName
+            }}
+            onSubmit={handleKpiFormSubmit}
+            onCancel={() => setIsKpiModalOpen(false)}
+            cvjStages={cvjStages}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Monthly Target Modal */}
+      <Dialog open={isMonthlyTargetModalOpen} onOpenChange={setIsMonthlyTargetModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editingMonthlyTarget ? 'Edit Monthly Target' : 'Add Monthly Target'}</DialogTitle>
+          </DialogHeader>
+          <MonthlyTargetForm
+            initialData={editingMonthlyTarget ? {
+              id: editingMonthlyTarget.id,
+              kpiId: editingMonthlyTarget.kpiId,
+              monthId: editingMonthlyTarget.monthId,
+              targetValue: editingMonthlyTarget.targetValue.toString()
+            } : {
+              id: undefined,
+              kpiId: '',
+              monthId: selectedMonthId,
+              targetValue: ''
+            }}
+            onSubmit={handleMonthlyTargetFormSubmit}
+            onCancel={() => setIsMonthlyTargetModalOpen(false)}
+            allKpis={allKpis}
+            allMonths={uniqueMonths}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Week Modal */}
+      <Dialog open={isWeekModalOpen} onOpenChange={setIsWeekModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editingWeek ? 'Edit Week' : 'Add New Week'}</DialogTitle>
+          </DialogHeader>
+          <WeekForm
+            initialData={editingWeek ? {
+              originalId: editingWeek.id,
+              startDate: editingWeek.startDateString,
+              endDate: editingWeek.endDateString
+            } : {
+              originalId: undefined,
+              startDate: '',
+              endDate: ''
+            }}
+            onSubmit={handleAddOrUpdateWeek}
+            onCancel={() => setIsWeekModalOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
+  );
+}
+
+// Form Components
+interface KpiFormProps {
+  initialData: KpiFormData;
+  onSubmit: (data: KpiFormData) => void;
+  onCancel: () => void;
+  cvjStages: CVJStage[];
+}
+
+function KpiForm({ initialData, onSubmit, onCancel, cvjStages }: KpiFormProps) {
+  const [formData, setFormData] = useState<KpiFormData>(initialData);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(formData);
+  };
+
+  const selectedStage = cvjStages.find(stage => stage.name === formData.cvjStageName);
+  const subCategories = selectedStage?.subCategories || [];
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label htmlFor="name">KPI Name</Label>
+        <Input
+          id="name"
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          required
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="description">Description</Label>
+        <Textarea
+          id="description"
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          required
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="cvjStageName">CVJ Stage</Label>
+        <Select
+          value={formData.cvjStageName}
+          onValueChange={(value) => setFormData({ ...formData, cvjStageName: value as CVJStageName })}
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {Object.values(CVJStageName).map(stage => (
+              <SelectItem key={stage} value={stage}>{stage}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <Label htmlFor="subCategoryName">Sub Category</Label>
+        <Select
+          value={formData.subCategoryName}
+          onValueChange={(value) => setFormData({ ...formData, subCategoryName: value })}
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {subCategories.map(subCategory => (
+              <SelectItem key={subCategory.id} value={subCategory.name}>
+                {subCategory.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <Label htmlFor="unitType">Unit Type</Label>
+        <Select
+          value={formData.unitType}
+          onValueChange={(value) => setFormData({ ...formData, unitType: value as UnitType })}
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {Object.values(UnitType).map(unit => (
+              <SelectItem key={unit} value={unit}>
+                {unit.replace('_', ' ')}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <Label htmlFor="defaultMonthlyTargetValue">Default Monthly Target</Label>
+        <Input
+          id="defaultMonthlyTargetValue"
+          type="number"
+          step="0.01"
+          value={formData.defaultMonthlyTargetValue}
+          onChange={(e) => setFormData({ ...formData, defaultMonthlyTargetValue: e.target.value })}
+        />
+      </div>
+
+      <div className="flex space-x-2 pt-4">
+        <Button type="submit" className="flex-1">
+          {initialData.id ? 'Update KPI' : 'Add KPI'}
+        </Button>
+        <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
+          Cancel
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+interface MonthlyTargetFormProps {
+  initialData: MonthlyTargetFormData;
+  onSubmit: (data: MonthlyTargetFormData) => void;
+  onCancel: () => void;
+  allKpis: KPI[];
+  allMonths: { id: string; name: string; year: number; month: number }[];
+}
+
+function MonthlyTargetForm({ initialData, onSubmit, onCancel, allKpis, allMonths }: MonthlyTargetFormProps) {
+  const [formData, setFormData] = useState<MonthlyTargetFormData>(initialData);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label htmlFor="kpiId">KPI</Label>
+        <Select
+          value={formData.kpiId}
+          onValueChange={(value) => setFormData({ ...formData, kpiId: value })}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select KPI" />
+          </SelectTrigger>
+          <SelectContent>
+            {allKpis.map(kpi => (
+              <SelectItem key={kpi.id} value={kpi.id}>
+                {kpi.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <Label htmlFor="monthId">Month</Label>
+        <Select
+          value={formData.monthId}
+          onValueChange={(value) => setFormData({ ...formData, monthId: value })}
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {allMonths.map(month => (
+              <SelectItem key={month.id} value={month.id}>
+                {month.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <Label htmlFor="targetValue">Target Value</Label>
+        <Input
+          id="targetValue"
+          type="number"
+          step="0.01"
+          value={formData.targetValue}
+          onChange={(e) => setFormData({ ...formData, targetValue: e.target.value })}
+          required
+        />
+      </div>
+
+      <div className="flex space-x-2 pt-4">
+        <Button type="submit" className="flex-1">
+          {initialData.id ? 'Update Target' : 'Add Target'}
+        </Button>
+        <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
+          Cancel
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+interface WeekFormProps {
+  initialData: WeekFormData;
+  onSubmit: (data: WeekFormData) => void;
+  onCancel: () => void;
+}
+
+function WeekForm({ initialData, onSubmit, onCancel }: WeekFormProps) {
+  const [formData, setFormData] = useState<WeekFormData>(initialData);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label htmlFor="startDate">Start Date</Label>
+        <Input
+          id="startDate"
+          type="date"
+          value={formData.startDate}
+          onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+          required
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="endDate">End Date</Label>
+        <Input
+          id="endDate"
+          type="date"
+          value={formData.endDate}
+          onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+          required
+        />
+      </div>
+
+      <div className="flex space-x-2 pt-4">
+        <Button type="submit" className="flex-1">
+          {initialData.originalId ? 'Update Week' : 'Add Week'}
+        </Button>
+        <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
+          Cancel
+        </Button>
+      </div>
+    </form>
   );
 }
