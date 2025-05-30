@@ -816,6 +816,7 @@ export default function Admin() {
             }}
             onSubmit={handleAddOrUpdateWeek}
             onCancel={() => setIsWeekModalOpen(false)}
+            existingWeeks={weeks}
           />
         </DialogContent>
       </Dialog>
@@ -1026,27 +1027,104 @@ interface WeekFormProps {
   initialData: WeekFormData;
   onSubmit: (data: WeekFormData) => void;
   onCancel: () => void;
+  existingWeeks: Week[];
 }
 
-function WeekForm({ initialData, onSubmit, onCancel }: WeekFormProps) {
+function WeekForm({ initialData, onSubmit, onCancel, existingWeeks }: WeekFormProps) {
   const [formData, setFormData] = useState<WeekFormData>(initialData);
+  const [errors, setErrors] = useState<{ startDate?: string; endDate?: string; duplicate?: string }>({});
+
+  const validateForm = (): boolean => {
+    const newErrors: { startDate?: string; endDate?: string; duplicate?: string } = {};
+
+    if (!formData.startDate) {
+      newErrors.startDate = 'Start date is required';
+    }
+
+    if (!formData.endDate) {
+      newErrors.endDate = 'End date is required';
+    }
+
+    if (formData.startDate && formData.endDate) {
+      const startDate = new Date(formData.startDate);
+      const endDate = new Date(formData.endDate);
+
+      // Check if end date is before start date
+      if (endDate < startDate) {
+        newErrors.endDate = 'End date cannot be before start date';
+      }
+
+      // Check if the date range is reasonable (between 1-14 days)
+      const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+      if (daysDiff > 14) {
+        newErrors.endDate = 'Week duration cannot exceed 14 days';
+      }
+
+      // Check for duplicate weeks (same year and week number)
+      if (daysDiff >= 0 && daysDiff <= 14) {
+        const getISOWeek = (date: Date): number => {
+          const target = new Date(date.valueOf());
+          const dayNr = (date.getDay() + 6) % 7;
+          target.setDate(target.getDate() - dayNr + 3);
+          const firstThursday = target.valueOf();
+          target.setMonth(0, 1);
+          if (target.getDay() !== 4) {
+            target.setMonth(0, 1 + ((4 - target.getDay()) + 7) % 7);
+          }
+          return 1 + Math.ceil((firstThursday - target.valueOf()) / 604800000);
+        };
+
+        const weekNumber = getISOWeek(startDate);
+        const year = startDate.getFullYear();
+        
+        // Check if this week already exists (unless we're editing the same week)
+        const duplicateWeek = existingWeeks.find(week => 
+          week.year === year && 
+          week.weekNumber === weekNumber &&
+          week.id !== formData.originalId
+        );
+
+        if (duplicateWeek) {
+          newErrors.duplicate = `Week ${weekNumber} of ${year} already exists`;
+        }
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    if (validateForm()) {
+      onSubmit(formData);
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {errors.duplicate && (
+        <div className="bg-red-50 border border-red-200 rounded-md p-3">
+          <p className="text-sm text-red-600">{errors.duplicate}</p>
+        </div>
+      )}
+      
       <div>
         <Label htmlFor="startDate">Start Date</Label>
         <Input
           id="startDate"
           type="date"
           value={formData.startDate}
-          onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+          onChange={(e) => {
+            setFormData({ ...formData, startDate: e.target.value });
+            if (errors.startDate) setErrors({ ...errors, startDate: undefined });
+          }}
+          className={errors.startDate ? 'border-red-500' : ''}
           required
         />
+        {errors.startDate && (
+          <p className="text-sm text-red-600 mt-1">{errors.startDate}</p>
+        )}
       </div>
 
       <div>
@@ -1055,9 +1133,16 @@ function WeekForm({ initialData, onSubmit, onCancel }: WeekFormProps) {
           id="endDate"
           type="date"
           value={formData.endDate}
-          onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+          onChange={(e) => {
+            setFormData({ ...formData, endDate: e.target.value });
+            if (errors.endDate) setErrors({ ...errors, endDate: undefined });
+          }}
+          className={errors.endDate ? 'border-red-500' : ''}
           required
         />
+        {errors.endDate && (
+          <p className="text-sm text-red-600 mt-1">{errors.endDate}</p>
+        )}
       </div>
 
       <div className="flex space-x-2 pt-4">
