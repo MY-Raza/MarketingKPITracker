@@ -594,12 +594,19 @@ app.post("/api/sub-categories/update", async (req, res) => {
 app.put("/api/sub-categories/:id", async (req, res) => {
   try {
     const { id } = req.params;
+    console.log('Updating subcategory with ID:', id);
+    console.log('Request body:', req.body);
+    
     const { name, stageId, displayOrder } = req.body;
-    const updatedSubCategory = await storage.updateSubCategory(id, {
+    const updateData = {
       name,
       cvjStageId: stageId,
       displayOrder
-    });
+    };
+    console.log('Update data:', updateData);
+    
+    const updatedSubCategory = await storage.updateSubCategory(id, updateData);
+    console.log('Updated subcategory result:', updatedSubCategory);
     res.json(updatedSubCategory);
   } catch (error) {
     console.error("Error updating subcategory:", error);
