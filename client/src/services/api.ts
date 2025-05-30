@@ -503,7 +503,7 @@ class ApiClient {
   }
 
   async updateSubcategory(id: string, data: any): Promise<any> {
-    return this.put(`/api/sub-categories/${id}`, data);
+    return this.post('/api/sub-categories/update', { id, ...data });
   }
 
   async deleteSubcategory(id: string): Promise<void> {
