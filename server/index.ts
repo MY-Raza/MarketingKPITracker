@@ -441,9 +441,12 @@ app.get("/api/weeks", async (req, res) => {
 
 app.post("/api/weeks", async (req, res) => {
   try {
+    console.log('Week creation request body:', req.body);
     const { startDate, endDate, displayName, originalId } = req.body;
+    console.log('Extracted fields:', { startDate, endDate, displayName, originalId });
     
     if (!startDate || !endDate) {
+      console.log('Missing required fields - startDate:', startDate, 'endDate:', endDate);
       return res.status(400).json({ 
         success: false, 
         message: 'Start date and end date are required' 
