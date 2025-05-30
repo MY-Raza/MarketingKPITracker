@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import authRoutes from "./controllers/auth";
 import cvjRoutes from "./controllers/cvj";
 import kpiRoutes from "./controllers/kpi";
+import subcategoryRoutes from "./controllers/subcategory";
 import weeklyDataRoutes from "./controllers/weekly-data";
 import monthlyTargetsRoutes from "./controllers/monthly-targets";
 import analyticsRoutes from "./controllers/analytics";
@@ -14,6 +15,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/auth", authRoutes);
   app.use("/api/admin", adminRoutes);
   app.use("/api/cvj-stages", cvjRoutes);
+  app.use("/api/subcategories", subcategoryRoutes);
   app.use("/api/kpis", kpiRoutes);
   app.use("/api/weekly-data", weeklyDataRoutes);
   app.use("/api/monthly-targets", monthlyTargetsRoutes);

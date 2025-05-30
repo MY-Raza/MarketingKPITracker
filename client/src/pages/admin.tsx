@@ -37,48 +37,24 @@ export default function Admin() {
   const [adminTab, setAdminTab] = useState<'kpis' | 'targets' | 'weeks' | 'subcategories'>('kpis');
   const [selectedMonthId, setSelectedMonthId] = useState<string>('2025-05');
 
-  // Fetch data from multiple working endpoints
-  const { data: basicStages = [] } = useQuery({
-    queryKey: ['/api/cvj-stages'],
-    queryFn: () => apiClient.getCvjStages(false, false)
+  // Fetch CVJ stages with full hierarchy (working endpoint)
+  const { data: cvjStages = [], isLoading: isLoadingStages } = useQuery({
+    queryKey: ['/api/cvj-stages-hierarchy'],
+    queryFn: () => apiClient.get('/api/cvj-stages-hierarchy')
   });
 
-  const { data: subcategories = [] } = useQuery({
-    queryKey: ['/api/subcategories'],
-    queryFn: () => apiClient.get('/api/subcategories')
-  });
-
-  const { data: kpisData = [] } = useQuery({
-    queryKey: ['/api/kpis'],
-    queryFn: () => apiClient.get('/api/kpis')
-  });
-
-  const { data: weeks = [] } = useQuery({
+  const { data: weeks = [], isLoading: isLoadingWeeks } = useQuery({
     queryKey: ['/api/analytics/weeks'],
     queryFn: () => apiClient.getWeeks()
   });
 
-  const { data: monthlyTargets = [] } = useQuery({
+  const { data: monthlyTargets = [], isLoading: isLoadingTargets } = useQuery({
     queryKey: ['/api/monthly-targets'],
     queryFn: () => apiClient.getMonthlyTargets()
   });
 
-  // Build hierarchy manually on client side
-  const cvjStages = basicStages.map(stage => ({
-    ...stage,
-    subCategories: subcategories
-      .filter(sub => sub.cvjStageId === stage.id)
-      .map(sub => ({
-        ...sub,
-        kpis: kpisData.filter(kpi => kpi.subCategoryId === sub.id)
-      }))
-      .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
-  })).sort((a, b) => a.displayOrder - b.displayOrder);
-
   console.log('Admin - Data loaded:', { 
-    stages: basicStages.length, 
-    subcategories: subcategories.length, 
-    kpis: kpisData.length,
+    cvjStages: cvjStages.length,
     weeks: weeks.length, 
     monthlyTargets: monthlyTargets.length 
   });
@@ -96,8 +72,10 @@ export default function Admin() {
   const [defaultCvjStageName, setDefaultCvjStageName] = useState<CVJStageName>(CVJStageName.AWARE);
   const [selectedStageForSubcategory, setSelectedStageForSubcategory] = useState<string>('');
 
-  // Get all KPIs
-  const allKpis = kpisData;
+  // Get all KPIs from the hierarchy
+  const allKpis = cvjStages.flatMap((stage: any) => 
+    stage.subCategories?.flatMap((sub: any) => sub.kpis || []) || []
+  );
 
   // Get unique months
   const uniqueMonths = [
