@@ -421,7 +421,7 @@ export default function Admin() {
                 </CardHeader>
 
                 <CardContent className="p-6">
-                  {stage.subCategories.map(subCategory => (
+                  {(stage.subCategories || []).map(subCategory => (
                     <div key={subCategory.id} className="mb-8">
                       <div className="flex justify-between items-center mb-4">
                         <div>
@@ -439,7 +439,7 @@ export default function Admin() {
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {subCategory.kpis.map(kpi => (
+                        {(subCategory.kpis || []).map(kpi => (
                           <div key={kpi.id} className="bg-slate-50 rounded-xl p-4 hover:bg-slate-100 transition-colors">
                             <div className="flex justify-between items-start mb-3">
                               <h5 className="font-semibold text-slate-900 text-sm">{kpi.name}</h5>
@@ -707,7 +707,7 @@ export default function Admin() {
 
                 <CardContent className="p-6">
                   <div className="space-y-4">
-                    {stage.subCategories.map(subCategory => (
+                    {(stage.subCategories || []).map(subCategory => (
                       <div key={subCategory.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
                         <div className="flex-1">
                           <h4 className="font-medium text-slate-900">{subCategory.name}</h4>
@@ -890,7 +890,7 @@ function KpiForm({ initialData, onSubmit, onCancel, cvjStages }: KpiFormProps) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {subCategories.map(subCategory => (
+            {(subCategories || []).map(subCategory => (
               <SelectItem key={subCategory.id} value={subCategory.name}>
                 {subCategory.name}
               </SelectItem>
