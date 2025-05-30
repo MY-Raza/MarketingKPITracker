@@ -581,7 +581,16 @@ app.put("/api/weeks/:id", async (req, res) => {
 app.delete("/api/weeks/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    await storage.deleteWeek(id);
+    console.log(`Attempting to delete week with id: "${id}"`);
+    
+    // Direct database deletion to handle special characters properly
+    const { db } = await import('./db');
+    const { weeks } = await import('../shared/schema');
+    const { eq } = await import('drizzle-orm');
+    
+    const result = await db.delete(weeks).where(eq(weeks.id, id));
+    console.log(`Delete operation result:`, result);
+    
     res.json({ success: true });
   } catch (error) {
     console.error('Error deleting week:', error);
