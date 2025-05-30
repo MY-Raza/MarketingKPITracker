@@ -96,16 +96,49 @@ app.post("/api/kpis", async (req, res) => {
   }
 });
 
-app.put("/api/kpis/:id", async (req, res) => {
+// POST endpoint for updating KPIs (to avoid Vite routing conflicts)
+app.post("/api/kpis/update", async (req, res) => {
   try {
-    const { id } = req.params;
-    const { name, description, unitType, defaultMonthlyTargetValue } = req.body;
+    const { id, name, description, unitType, defaultMonthlyTargetValue, subCategoryId } = req.body;
+    console.log('Updating KPI with ID:', id);
+    console.log('Request body:', req.body);
+    
+    if (!id) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'KPI ID is required' 
+      });
+    }
     
     const updateData = {
       name,
       description,
       unitType,
-      defaultMonthlyTargetValue: defaultMonthlyTargetValue ? parseFloat(defaultMonthlyTargetValue) : null
+      defaultMonthlyTargetValue: defaultMonthlyTargetValue ? parseFloat(defaultMonthlyTargetValue) : null,
+      subCategoryId
+    };
+
+    console.log('Update data:', updateData);
+    const updatedKPI = await storage.updateKpi(id, updateData);
+    console.log('Updated KPI result:', updatedKPI);
+    res.json(updatedKPI);
+  } catch (error) {
+    console.error('Error updating KPI:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+app.put("/api/kpis/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description, unitType, defaultMonthlyTargetValue, subCategoryId } = req.body;
+    
+    const updateData = {
+      name,
+      description,
+      unitType,
+      defaultMonthlyTargetValue: defaultMonthlyTargetValue ? parseFloat(defaultMonthlyTargetValue) : null,
+      subCategoryId
     };
 
     const updatedKPI = await storage.updateKpi(id, updateData);

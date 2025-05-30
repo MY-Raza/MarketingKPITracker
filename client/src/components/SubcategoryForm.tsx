@@ -51,7 +51,6 @@ export function SubcategoryForm({ initialData, onSubmit, onCancel, cvjStages }: 
         displayOrder: Number(formData.displayOrder),
         cvjStageId: formData.stageId
       };
-      console.log('SubcategoryForm: Submitting data:', submitData);
       onSubmit(submitData);
     }
   };

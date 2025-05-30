@@ -280,7 +280,7 @@ class ApiClient {
   }
 
   async updateKpi(id: string, data: any): Promise<any> {
-    return this.put(`/api/kpis/${id}`, data);
+    return this.post('/api/kpis/update', { id, ...data });
   }
 
   async deleteKpi(id: string): Promise<void> {
@@ -503,7 +503,7 @@ class ApiClient {
   }
 
   async updateSubcategory(id: string, data: any): Promise<any> {
-    return this.post('/api/sub-categories/update', { id, ...data });
+    return this.put(`/api/sub-categories/${id}`, data);
   }
 
   async deleteSubcategory(id: string): Promise<void> {
