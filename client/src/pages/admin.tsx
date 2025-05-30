@@ -40,7 +40,7 @@ export default function Admin() {
   // Fetch CVJ stages with hierarchy from API using authenticated client
   const { data: cvjStages = [], isLoading: isLoadingStages } = useQuery({
     queryKey: ['/api/cvj-stages', 'hierarchy'],
-    queryFn: () => apiClient.getCvjStages(true, false)
+    queryFn: () => apiClient.getCvjStages(true, true)
   });
 
   // Debug logging
@@ -731,7 +731,7 @@ export default function Admin() {
                       </div>
                     ))}
                     
-                    {stage.subCategories.length === 0 && (
+                    {(stage.subCategories || []).length === 0 && (
                       <div className="text-center py-8 text-slate-500">
                         No subcategories yet. Add one to get started.
                       </div>
