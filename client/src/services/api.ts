@@ -317,19 +317,19 @@ class ApiClient {
   }
 
   async createWeeklyDataEntry(data: any): Promise<any> {
-    return this.post('/api/weekly-data', data);
+    return this.post('/api/admin/weekly-data-create', data);
   }
 
   async updateWeeklyDataEntry(id: string, data: any): Promise<any> {
-    return this.post(`/api/weekly-data/${id}/update`, data);
+    return this.post('/api/admin/weekly-data-update', { id, ...data });
   }
 
   async deleteWeeklyDataEntry(id: string): Promise<void> {
-    return this.delete(`/api/weekly-data/${id}`);
+    return this.post('/api/admin/weekly-data-delete', { id });
   }
 
   async bulkUpsertWeeklyData(entries: any[]): Promise<any[]> {
-    return this.post('/api/weekly-data/bulk', { entries });
+    return this.post('/api/admin/weekly-data-bulk', { entries });
   }
 
   async getWeeklyDataForWeek(weekId: string): Promise<any> {
