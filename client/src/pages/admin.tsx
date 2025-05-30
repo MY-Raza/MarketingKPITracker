@@ -40,7 +40,7 @@ export default function Admin() {
   // Fetch CVJ stages with hierarchy from API using authenticated client
   const { data: cvjStages = [], isLoading: isLoadingStages } = useQuery({
     queryKey: ['/api/cvj-stages', 'hierarchy'],
-    queryFn: () => apiClient.getCvjStages(true, true)
+    queryFn: () => apiClient.getCvjStages(false, true)
   });
 
   // Debug logging

@@ -6,6 +6,7 @@ import kpiRoutes from "./controllers/kpi";
 import weeklyDataRoutes from "./controllers/weekly-data";
 import monthlyTargetsRoutes from "./controllers/monthly-targets";
 import analyticsRoutes from "./controllers/analytics";
+import { storage } from "./storage";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API routes
@@ -15,6 +16,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/weekly-data", weeklyDataRoutes);
   app.use("/api/monthly-targets", monthlyTargetsRoutes);
   app.use("/api/analytics", analyticsRoutes);
+
+  // Temporary direct hierarchy endpoint for admin
+  app.get("/api/cvj-stages-hierarchy", async (req, res) => {
+    try {
+      const stagesWithHierarchy = await storage.getCvjStagesWithHierarchy();
+      
+      // Group the flat data into hierarchical structure
+      const stagesMap = new Map();
+      
+      stagesWithHierarchy.forEach(row => {
+        if (!stagesMap.has(row.id)) {
+          stagesMap.set(row.id, {
+            id: row.id,
+            name: row.name,
+            displayOrder: row.displayOrder,
+            colorCode: row.colorCode,
+            isActive: row.isActive,
+            subCategories: new Map()
+          });
+        }
+        
+        const stage = stagesMap.get(row.id);
+        
+        if (row.subCategories?.id && !stage.subCategories.has(row.subCategories.id)) {
+          stage.subCategories.set(row.subCategories.id, {
+            id: row.subCategories.id,
+            name: row.subCategories.name,
+            displayOrder: row.subCategories.displayOrder,
+            kpis: []
+          });
+        }
+        
+        if (row.kpis?.id && row.subCategories?.id) {
+          const subCategory = stage.subCategories.get(row.subCategories.id);
+          const existingKpi = subCategory.kpis.find((k: any) => k.id === row.kpis.id);
+          
+          if (!existingKpi) {
+            subCategory.kpis.push({
+              id: row.kpis.id,
+              name: row.kpis.name,
+              description: row.kpis.description,
+              unitType: row.kpis.unitType,
+              defaultMonthlyTargetValue: row.kpis.defaultMonthlyTargetValue,
+              isActive: row.kpis.isActive
+            });
+          }
+        }
+      });
+      
+      const formattedStages = Array.from(stagesMap.values()).map(stage => ({
+        ...stage,
+        subCategories: Array.from(stage.subCategories.values())
+          .sort((a, b) => a.displayOrder - b.displayOrder)
+      }));
+
+      res.json(formattedStages);
+    } catch (error) {
+      console.error('Hierarchy endpoint error:', error);
+      res.status(500).json({ error: 'Failed to fetch hierarchy data' });
+    }
+  });
 
   // Health check endpoint
   app.get("/api/health", (req, res) => {

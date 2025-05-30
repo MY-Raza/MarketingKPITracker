@@ -19,6 +19,7 @@ router.get(
     console.log('CVJ Controller: Query params:', req.query);
     console.log('CVJ Controller: includeInactive:', includeInactive);
     console.log('CVJ Controller: includeHierarchy:', includeHierarchy);
+    console.log('CVJ Controller: Processing request...');
 
     if (includeHierarchy) {
       console.log('CVJ Controller: includeHierarchy is true, fetching hierarchy data...');
