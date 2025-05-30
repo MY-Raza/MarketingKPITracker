@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Info, TrendingUp, TrendingDown, Target, BarChart3 } from "lucide-react";
 import { useAuth } from '../hooks/use-auth';
+import { apiClient } from '../services/api';
 import { 
   CVJStageName, 
   UnitType, 
@@ -69,18 +70,22 @@ export default function Dashboard() {
   // Fetch all data from backend
   const { data: cvjStages = [], isLoading: isLoadingStages } = useQuery<CVJStage[]>({
     queryKey: ['/api/cvj-stages'],
+    queryFn: () => apiClient.getCvjStages(true, false),
   });
 
   const { data: weeks = [], isLoading: isLoadingWeeks } = useQuery<Week[]>({
-    queryKey: ['/api/analytics/weeks'],
+    queryKey: ['/api/weeks'],
+    queryFn: () => apiClient.getWeeks(),
   });
 
   const { data: weeklyData = [], isLoading: isLoadingWeeklyData } = useQuery<WeeklyDataEntry[]>({
     queryKey: ['/api/weekly-data'],
+    queryFn: () => apiClient.getWeeklyData({}),
   });
 
   const { data: monthlyTargets = [], isLoading: isLoadingTargets } = useQuery<MonthlyKpiTarget[]>({
     queryKey: ['/api/monthly-targets'],
+    queryFn: () => apiClient.getMonthlyTargets({}),
   });
 
   // Show loading state while any data is being fetched
