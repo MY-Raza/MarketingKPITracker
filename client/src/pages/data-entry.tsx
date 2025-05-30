@@ -99,6 +99,12 @@ export default function DataEntry() {
     },
     onError: (error: any) => {
       console.error('Failed to save weekly data:', error);
+      console.error('Error details:', {
+        response: error?.response,
+        data: error?.response?.data,
+        status: error?.response?.status,
+        message: error?.message
+      });
       const errorMessage = error?.response?.data?.message || error?.message || 'Failed to save data';
       alert(`Error: ${errorMessage}`);
     }
@@ -109,7 +115,13 @@ export default function DataEntry() {
   }, []);
 
   const handleSaveData = useCallback(() => {
-    if (!selectedWeekId) return;
+    if (!selectedWeekId) {
+      console.log('No week selected');
+      return;
+    }
+
+    console.log('Form data to save:', formData);
+    console.log('Selected week ID:', selectedWeekId);
 
     const entries = Object.entries(formData)
       .map(([kpiId, value]) => ({
@@ -119,8 +131,12 @@ export default function DataEntry() {
       }))
       .filter(entry => !isNaN(entry.actualValue as number) || entry.actualValue === null);
 
+    console.log('Processed entries:', entries);
+
     if (entries.length > 0) {
       saveWeeklyDataMutation.mutate(entries);
+    } else {
+      console.log('No valid entries to save');
     }
   }, [selectedWeekId, formData, saveWeeklyDataMutation]);
 
@@ -288,7 +304,8 @@ export default function DataEntry() {
                                         value={formData[kpi.id] || ''}
                                         onChange={(e) => handleInputChange(kpi.id, e.target.value)}
                                         placeholder={`Actual (${kpi.unitType.replace('_', ' ')})`}
-                                        className="w-full"
+                                        className="w-full [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                        style={{ MozAppearance: 'textfield' }}
                                       />
                                       
                                       {kpi.description && (
