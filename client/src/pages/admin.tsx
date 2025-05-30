@@ -285,27 +285,55 @@ export default function Admin() {
 
   // Subcategory mutations
   const createSubcategoryMutation = useMutation({
-    mutationFn: (data: any) => apiClient.createSubcategory(data),
+    mutationFn: (data: any) => {
+      console.log('Frontend: Creating subcategory with data:', data);
+      return apiClient.createSubcategory(data);
+    },
     onSuccess: () => {
+      console.log('Frontend: Subcategory creation successful');
       queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages-hierarchy'] });
       setIsSubcategoryModalOpen(false);
       setEditingSubcategory(undefined);
+    },
+    onError: (error: any) => {
+      console.error('Frontend: Subcategory creation failed:', error);
+      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to create subcategory';
+      alert(errorMessage);
     }
   });
 
   const updateSubcategoryMutation = useMutation({
-    mutationFn: ({ id, ...data }: any) => apiClient.updateSubcategory(id, data),
+    mutationFn: ({ id, ...data }: any) => {
+      console.log('Frontend: Updating subcategory with ID:', id);
+      console.log('Frontend: Subcategory data:', data);
+      return apiClient.updateSubcategory(id, data);
+    },
     onSuccess: () => {
+      console.log('Frontend: Subcategory update successful');
       queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages-hierarchy'] });
       setIsSubcategoryModalOpen(false);
       setEditingSubcategory(undefined);
+    },
+    onError: (error: any) => {
+      console.error('Frontend: Subcategory update failed:', error);
+      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to update subcategory';
+      alert(errorMessage);
     }
   });
 
   const deleteSubcategoryMutation = useMutation({
-    mutationFn: (id: string) => apiClient.deleteSubcategory(id),
+    mutationFn: (id: string) => {
+      console.log('Frontend: Deleting subcategory with ID:', id);
+      return apiClient.deleteSubcategory(id);
+    },
     onSuccess: () => {
+      console.log('Frontend: Subcategory deletion successful');
       queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages-hierarchy'] });
+    },
+    onError: (error: any) => {
+      console.error('Frontend: Subcategory deletion failed:', error);
+      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to delete subcategory';
+      alert(errorMessage);
     }
   });
 

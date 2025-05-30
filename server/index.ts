@@ -495,6 +495,37 @@ app.post("/api/sub-categories", async (req, res) => {
   }
 });
 
+// POST endpoint for updating subcategories (to avoid Vite routing conflicts)
+app.post("/api/sub-categories/update", async (req, res) => {
+  try {
+    const { id, name, stageId, displayOrder } = req.body;
+    console.log('Updating subcategory with ID:', id);
+    console.log('Request body:', req.body);
+    
+    if (!id || !name || !stageId) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Missing required fields: id, name, stageId' 
+      });
+    }
+    
+    const updateData = {
+      name,
+      cvjStageId: stageId,
+      displayOrder: displayOrder || 1
+    };
+
+    console.log('Update data:', updateData);
+    const updatedSubCategory = await storage.updateSubCategory(id, updateData);
+    console.log('Updated subcategory result:', updatedSubCategory);
+    res.json(updatedSubCategory);
+  } catch (error) {
+    console.error("Error updating subcategory:", error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Keep the PUT endpoint for compatibility
 app.put("/api/sub-categories/:id", async (req, res) => {
   try {
     const { id } = req.params;

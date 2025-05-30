@@ -495,19 +495,19 @@ class ApiClient {
 
   // Subcategories
   async getSubcategories(): Promise<any[]> {
-    return this.get('/api/analytics/subcategories');
+    return this.get('/api/sub-categories');
   }
 
   async createSubcategory(data: any): Promise<any> {
-    return this.post('/api/analytics/subcategories', data);
+    return this.post('/api/sub-categories', data);
   }
 
   async updateSubcategory(id: string, data: any): Promise<any> {
-    return this.put(`/api/analytics/subcategories/${id}`, data);
+    return this.post('/api/sub-categories/update', { id, ...data });
   }
 
   async deleteSubcategory(id: string): Promise<void> {
-    return this.delete(`/api/analytics/subcategories/${id}`);
+    return this.post(`/api/sub-categories/${id}/delete`);
   }
 }
 
