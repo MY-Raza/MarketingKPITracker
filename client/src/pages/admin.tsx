@@ -95,7 +95,7 @@ export default function Admin() {
   const createKpiMutation = useMutation({
     mutationFn: (kpiData: any) => apiClient.createKpi(kpiData),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages-hierarchy'] });
       setIsKpiModalOpen(false);
       setEditingKpi(undefined);
     }
@@ -104,7 +104,7 @@ export default function Admin() {
   const updateKpiMutation = useMutation({
     mutationFn: ({ id, ...kpiData }: any) => apiClient.updateKpi(id, kpiData),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages-hierarchy'] });
       setIsKpiModalOpen(false);
       setEditingKpi(undefined);
     }
@@ -113,7 +113,7 @@ export default function Admin() {
   const deleteKpiMutation = useMutation({
     mutationFn: (kpiId: string) => apiClient.deleteKpi(kpiId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages-hierarchy'] });
     }
   });
 
@@ -277,7 +277,7 @@ export default function Admin() {
   const createSubcategoryMutation = useMutation({
     mutationFn: (data: any) => apiClient.createSubcategory(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages-hierarchy'] });
       setIsSubcategoryModalOpen(false);
       setEditingSubcategory(undefined);
     }
@@ -286,7 +286,7 @@ export default function Admin() {
   const updateSubcategoryMutation = useMutation({
     mutationFn: ({ id, ...data }: any) => apiClient.updateSubcategory(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages-hierarchy'] });
       setIsSubcategoryModalOpen(false);
       setEditingSubcategory(undefined);
     }
@@ -295,7 +295,7 @@ export default function Admin() {
   const deleteSubcategoryMutation = useMutation({
     mutationFn: (id: string) => apiClient.deleteSubcategory(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages-hierarchy'] });
     }
   });
 
