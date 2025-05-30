@@ -441,28 +441,69 @@ app.get("/api/weeks", async (req, res) => {
 
 app.post("/api/weeks", async (req, res) => {
   try {
-    const { id, year, weekNumber, month, startDateString, endDateString } = req.body;
+    const { startDate, endDate, displayName, originalId } = req.body;
     
-    if (!id || !year || !weekNumber || !month || !startDateString || !endDateString) {
+    if (!startDate || !endDate) {
       return res.status(400).json({ 
         success: false, 
-        message: 'Missing required fields' 
+        message: 'Start date and end date are required' 
       });
     }
 
+    // Parse dates and calculate derived fields
+    const startDateObj = new Date(startDate);
+    const endDateObj = new Date(endDate);
+    
+    if (endDateObj <= startDateObj) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'End date must be after start date' 
+      });
+    }
+
+    const year = startDateObj.getFullYear();
+    const month = startDateObj.getMonth() + 1; // JavaScript months are 0-indexed
+    
+    // Auto-calculate week number
+    const getISOWeek = (date: Date): number => {
+      const target = new Date(date.valueOf());
+      const dayNr = (date.getDay() + 6) % 7;
+      target.setDate(target.getDate() - dayNr + 3);
+      const firstThursday = target.valueOf();
+      target.setMonth(0, 1);
+      if (target.getDay() !== 4) {
+        target.setMonth(0, 1 + ((4 - target.getDay()) + 7) % 7);
+      }
+      return 1 + Math.ceil((firstThursday - target.valueOf()) / 604800000);
+    };
+    
+    const weekNumber = getISOWeek(startDateObj);
+    
+    // Generate ID if not editing
+    const id = originalId || (displayName || `Week ${weekNumber} [${startDate.slice(5).replace('-', '/')}-${endDate.slice(5).replace('-', '/')}]`);
+
     const weekData = {
       id,
-      year: parseInt(year),
-      weekNumber: parseInt(weekNumber), 
-      month: parseInt(month),
-      startDateString,
-      endDateString
+      displayName: displayName || null,
+      year,
+      weekNumber,
+      month,
+      startDateString: startDate,
+      endDateString: endDate
     };
 
-    const newWeek = await storage.createWeek(weekData);
+    let newWeek;
+    if (originalId) {
+      // Update existing week
+      newWeek = await storage.updateWeek(originalId, weekData);
+    } else {
+      // Create new week
+      newWeek = await storage.createWeek(weekData);
+    }
+    
     res.status(201).json(newWeek);
   } catch (error) {
-    console.error('Error creating week:', error);
+    console.error('Error creating/updating week:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
