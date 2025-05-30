@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, Settings, Target, Calendar } from "lucide-react";
 import { useAuth } from '../hooks/use-auth';
 import { apiClient } from '../services/api';
+import { SubcategoryForm } from '@/components/SubcategoryForm';
 import { 
   CVJStageName, 
   UnitType, 
