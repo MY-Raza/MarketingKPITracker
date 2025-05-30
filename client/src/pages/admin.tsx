@@ -69,9 +69,13 @@ export default function Admin() {
   const [selectedStageForSubcategory, setSelectedStageForSubcategory] = useState<string>('');
 
   // Get all KPIs
-  const allKpis = cvjStages.flatMap(stage => 
-    stage.subCategories.flatMap(subCategory => subCategory.kpis)
-  );
+  const allKpis = cvjStages && Array.isArray(cvjStages) 
+    ? cvjStages.flatMap(stage => 
+        stage.subCategories?.flatMap(subCategory => 
+          subCategory.kpis || []
+        ) || []
+      )
+    : [];
 
   // Get unique months
   const uniqueMonths = [
