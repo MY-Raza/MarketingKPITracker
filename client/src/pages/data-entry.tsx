@@ -27,7 +27,7 @@ export default function DataEntry() {
   // Fetch CVJ stages with hierarchy
   const { data: cvjStages = [], isLoading: isLoadingStages } = useQuery({
     queryKey: ['/api/cvj-stages-hierarchy'],
-    queryFn: () => apiClient.getCvjStagesHierarchy(),
+    queryFn: () => apiClient.getCvjStages(true, false),
   });
 
   // Fetch weeks
@@ -39,7 +39,7 @@ export default function DataEntry() {
   // Fetch weekly data entries
   const { data: weeklyData = [], isLoading: isLoadingWeeklyData } = useQuery({
     queryKey: ['/api/weekly-data'],
-    queryFn: () => apiClient.getWeeklyData(),
+    queryFn: () => apiClient.getWeeklyData({}),
   });
 
   // Set default selected week when weeks are loaded
