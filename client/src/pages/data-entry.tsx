@@ -1,10 +1,11 @@
 import React, { useState, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Info, Calendar, Database } from "lucide-react";
+import { Info, Calendar, Database, Loader2 } from "lucide-react";
 import { 
   CVJStageName,
   type Week, 
@@ -12,11 +13,7 @@ import {
   type CVJStage, 
   type KPI 
 } from '../types/kpi';
-import { 
-  INITIAL_CVJ_STAGES, 
-  DEFAULT_WEEKS, 
-  INITIAL_WEEKLY_DATA 
-} from '../constants/kpi';
+import { apiClient } from '../services/api';
 
 const getMonthName = (year: number, month: number): string => {
   const date = new Date(year, month - 1, 1);
@@ -24,38 +21,77 @@ const getMonthName = (year: number, month: number): string => {
 };
 
 export default function DataEntry() {
-  const [cvjStages] = useState<CVJStage[]>(INITIAL_CVJ_STAGES);
-  const [weeks] = useState<Week[]>(DEFAULT_WEEKS);
-  const [weeklyData, setWeeklyData] = useState<WeeklyDataEntry[]>(INITIAL_WEEKLY_DATA);
-  const [selectedWeekId, setSelectedWeekId] = useState<string>(weeks[0]?.id || '');
+  const queryClient = useQueryClient();
+  const [selectedWeekId, setSelectedWeekId] = useState<string>('');
+
+  // Fetch CVJ stages with hierarchy
+  const { data: cvjStages = [], isLoading: isLoadingStages } = useQuery({
+    queryKey: ['/api/cvj-stages-hierarchy'],
+    queryFn: () => apiClient.getCvjStagesHierarchy(),
+  });
+
+  // Fetch weeks
+  const { data: weeks = [], isLoading: isLoadingWeeks } = useQuery({
+    queryKey: ['/api/weeks'],
+    queryFn: () => apiClient.getWeeks(),
+  });
+
+  // Fetch weekly data entries
+  const { data: weeklyData = [], isLoading: isLoadingWeeklyData } = useQuery({
+    queryKey: ['/api/weekly-data'],
+    queryFn: () => apiClient.getWeeklyData(),
+  });
+
+  // Set default selected week when weeks are loaded
+  if (selectedWeekId === '' && weeks.length > 0) {
+    setSelectedWeekId(weeks[0].id);
+  }
 
   const selectedWeek = weeks.find(week => week.id === selectedWeekId);
+
+  // Mutation for creating/updating weekly data
+  const saveWeeklyDataMutation = useMutation({
+    mutationFn: (data: { weekId: string; kpiId: string; actualValue: number | null }) => {
+      const existingEntry = weeklyData.find(
+        entry => entry.weekId === data.weekId && entry.kpiId === data.kpiId
+      );
+      
+      if (existingEntry) {
+        return apiClient.updateWeeklyDataEntry(existingEntry.id, {
+          weekId: data.weekId,
+          kpiId: data.kpiId,
+          actualValue: data.actualValue
+        });
+      } else {
+        return apiClient.createWeeklyDataEntry({
+          weekId: data.weekId,
+          kpiId: data.kpiId,
+          actualValue: data.actualValue
+        });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/weekly-data-entries'] });
+    },
+    onError: (error: any) => {
+      console.error('Failed to save weekly data:', error);
+      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to save data';
+      alert(`Error: ${errorMessage}`);
+    }
+  });
 
   const handleDataChange = useCallback((kpiId: string, actualValue: string) => {
     const numericValue = actualValue === '' ? null : parseFloat(actualValue);
     
-    setWeeklyData(prevData => {
-      const existingEntryIndex = prevData.findIndex(
-        entry => entry.weekId === selectedWeekId && entry.kpiId === kpiId
-      );
+    if (!selectedWeekId) return;
 
-      if (existingEntryIndex >= 0) {
-        const updatedData = [...prevData];
-        updatedData[existingEntryIndex] = {
-          ...updatedData[existingEntryIndex],
-          actualValue: numericValue,
-        };
-        return updatedData;
-      } else {
-        const newEntry: WeeklyDataEntry = {
-          weekId: selectedWeekId,
-          kpiId,
-          actualValue: numericValue,
-        };
-        return [...prevData, newEntry];
-      }
+    // Save to database
+    saveWeeklyDataMutation.mutate({
+      weekId: selectedWeekId,
+      kpiId,
+      actualValue: numericValue
     });
-  }, [selectedWeekId]);
+  }, [selectedWeekId, saveWeeklyDataMutation]);
 
   const stageColorMap: Record<CVJStageName, string> = {
     [CVJStageName.AWARE]: 'from-blue-500 to-blue-600',
@@ -67,6 +103,21 @@ export default function DataEntry() {
     [CVJStageName.ADVOCATE]: 'from-emerald-500 to-emerald-600',
     [CVJStageName.PROMOTE]: 'from-red-500 to-red-600',
   };
+
+  const isLoading = isLoadingStages || isLoadingWeeks || isLoadingWeeklyData;
+
+  if (isLoading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="flex items-center space-x-3">
+            <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+            <span className="text-lg text-slate-600">Loading data entry form...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
