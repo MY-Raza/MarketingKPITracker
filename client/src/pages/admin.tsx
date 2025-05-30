@@ -37,27 +37,19 @@ export default function Admin() {
   const [adminTab, setAdminTab] = useState<'kpis' | 'targets' | 'weeks' | 'subcategories'>('kpis');
   const [selectedMonthId, setSelectedMonthId] = useState<string>('2025-05');
 
-  // Fetch CVJ stages with hierarchy from API using authenticated client
-  const { data: cvjStages = [], isLoading: isLoadingStages } = useQuery({
-    queryKey: ['/api/cvj-stages', 'hierarchy'],
-    queryFn: () => apiClient.getCvjStages(false, true)
+  // Fetch all admin data from single endpoint
+  const { data: adminData, isLoading: isLoadingAdmin } = useQuery({
+    queryKey: ['/api/admin/data'],
+    queryFn: () => apiClient.get('/api/admin/data')
   });
 
-  // Debug logging
-  console.log('Admin - CVJ Stages data:', cvjStages);
-  console.log('Admin - CVJ Stages loading:', isLoadingStages);
+  // Extract data from admin response
+  const cvjStages = adminData?.cvjStages || [];
+  const weeks = adminData?.weeks || [];
+  const monthlyTargets = adminData?.monthlyTargets || [];
+  const allKpisFromAdmin = adminData?.allKpis || [];
 
-  // Fetch weeks from API using authenticated client
-  const { data: weeks = [], isLoading: isLoadingWeeks } = useQuery({
-    queryKey: ['/api/analytics/weeks'],
-    queryFn: () => apiClient.getWeeks()
-  });
-
-  // Fetch monthly targets from API using authenticated client  
-  const { data: monthlyTargets = [], isLoading: isLoadingTargets } = useQuery({
-    queryKey: ['/api/monthly-targets'],
-    queryFn: () => apiClient.getMonthlyTargets()
-  });
+  console.log('Admin - All data loaded:', { cvjStages: cvjStages.length, weeks: weeks.length, monthlyTargets: monthlyTargets.length });
   
   // Modal states
   const [isKpiModalOpen, setIsKpiModalOpen] = useState(false);
@@ -73,13 +65,7 @@ export default function Admin() {
   const [selectedStageForSubcategory, setSelectedStageForSubcategory] = useState<string>('');
 
   // Get all KPIs
-  const allKpis = cvjStages && Array.isArray(cvjStages) 
-    ? cvjStages.flatMap(stage => 
-        stage.subCategories?.flatMap(subCategory => 
-          subCategory.kpis || []
-        ) || []
-      )
-    : [];
+  const allKpis = allKpisFromAdmin;
 
   // Get unique months
   const uniqueMonths = [

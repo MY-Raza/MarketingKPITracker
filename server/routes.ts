@@ -6,11 +6,13 @@ import kpiRoutes from "./controllers/kpi";
 import weeklyDataRoutes from "./controllers/weekly-data";
 import monthlyTargetsRoutes from "./controllers/monthly-targets";
 import analyticsRoutes from "./controllers/analytics";
+import adminRoutes from "./controllers/admin";
 import { storage } from "./storage";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API routes
   app.use("/api/auth", authRoutes);
+  app.use("/api/admin", adminRoutes);
   app.use("/api/cvj-stages", cvjRoutes);
   app.use("/api/kpis", kpiRoutes);
   app.use("/api/weekly-data", weeklyDataRoutes);
