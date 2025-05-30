@@ -74,6 +74,7 @@ router.get(
           .sort((a, b) => a.displayOrder - b.displayOrder)
       }));
 
+      console.log('CVJ Controller: Formatted stages sample:', formattedStages[0]);
       res.json(successResponse(formattedStages, "CVJ stages with hierarchy retrieved successfully"));
     } else {
       const stages = await storage.getCvjStages(includeInactive);
