@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -23,6 +24,8 @@ const getMonthName = (year: number, month: number): string => {
 export default function DataEntry() {
   const queryClient = useQueryClient();
   const [selectedWeekId, setSelectedWeekId] = useState<string>('');
+  const [formData, setFormData] = useState<{ [key: string]: string }>({});
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   // Fetch CVJ stages with hierarchy
   const { data: cvjStages = [], isLoading: isLoadingStages } = useQuery({
@@ -43,35 +46,56 @@ export default function DataEntry() {
   });
 
   // Set default selected week when weeks are loaded
-  if (selectedWeekId === '' && weeks.length > 0) {
-    setSelectedWeekId(weeks[0].id);
-  }
+  React.useEffect(() => {
+    if (selectedWeekId === '' && weeks.length > 0) {
+      setSelectedWeekId(weeks[0].id);
+    }
+  }, [weeks, selectedWeekId]);
+
+  // Load existing data when week changes
+  React.useEffect(() => {
+    if (selectedWeekId && weeklyData.length > 0) {
+      const newFormData: { [key: string]: string } = {};
+      weeklyData.forEach((entry: any) => {
+        if (entry.weekId === selectedWeekId) {
+          newFormData[entry.kpiId] = entry.actualValue?.toString() || '';
+        }
+      });
+      setFormData(newFormData);
+    }
+  }, [selectedWeekId, weeklyData]);
 
   const selectedWeek = weeks.find(week => week.id === selectedWeekId);
 
-  // Mutation for creating/updating weekly data
+  // Mutation for bulk saving weekly data
   const saveWeeklyDataMutation = useMutation({
-    mutationFn: (data: { weekId: string; kpiId: string; actualValue: number | null }) => {
-      const existingEntry = weeklyData.find(
-        entry => entry.weekId === data.weekId && entry.kpiId === data.kpiId
-      );
+    mutationFn: async (entries: { weekId: string; kpiId: string; actualValue: number | null }[]) => {
+      const promises = entries.map(async (data) => {
+        const existingEntry = weeklyData.find(
+          (entry: any) => entry.weekId === data.weekId && entry.kpiId === data.kpiId
+        );
+        
+        if (existingEntry) {
+          return apiClient.updateWeeklyDataEntry(existingEntry.id, {
+            weekId: data.weekId,
+            kpiId: data.kpiId,
+            actualValue: data.actualValue
+          });
+        } else {
+          return apiClient.createWeeklyDataEntry({
+            weekId: data.weekId,
+            kpiId: data.kpiId,
+            actualValue: data.actualValue
+          });
+        }
+      });
       
-      if (existingEntry) {
-        return apiClient.updateWeeklyDataEntry(existingEntry.id, {
-          weekId: data.weekId,
-          kpiId: data.kpiId,
-          actualValue: data.actualValue
-        });
-      } else {
-        return apiClient.createWeeklyDataEntry({
-          weekId: data.weekId,
-          kpiId: data.kpiId,
-          actualValue: data.actualValue
-        });
-      }
+      return Promise.all(promises);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/weekly-data-entries'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/weekly-data'] });
+      setShowSuccessMessage(true);
+      setTimeout(() => setShowSuccessMessage(false), 3000);
     },
     onError: (error: any) => {
       console.error('Failed to save weekly data:', error);
@@ -80,18 +104,25 @@ export default function DataEntry() {
     }
   });
 
-  const handleDataChange = useCallback((kpiId: string, actualValue: string) => {
-    const numericValue = actualValue === '' ? null : parseFloat(actualValue);
-    
+  const handleInputChange = useCallback((kpiId: string, value: string) => {
+    setFormData(prev => ({ ...prev, [kpiId]: value }));
+  }, []);
+
+  const handleSaveData = useCallback(() => {
     if (!selectedWeekId) return;
 
-    // Save to database
-    saveWeeklyDataMutation.mutate({
-      weekId: selectedWeekId,
-      kpiId,
-      actualValue: numericValue
-    });
-  }, [selectedWeekId, saveWeeklyDataMutation]);
+    const entries = Object.entries(formData)
+      .map(([kpiId, value]) => ({
+        weekId: selectedWeekId,
+        kpiId,
+        actualValue: value === '' ? null : parseFloat(value)
+      }))
+      .filter(entry => !isNaN(entry.actualValue as number) || entry.actualValue === null);
+
+    if (entries.length > 0) {
+      saveWeeklyDataMutation.mutate(entries);
+    }
+  }, [selectedWeekId, formData, saveWeeklyDataMutation]);
 
   const stageColorMap: Record<CVJStageName, string> = {
     [CVJStageName.AWARE]: 'from-blue-500 to-blue-600',
@@ -144,8 +175,38 @@ export default function DataEntry() {
                 </SelectContent>
               </Select>
             </div>
+            <Button 
+              onClick={handleSaveData}
+              disabled={saveWeeklyDataMutation.isPending || !selectedWeekId}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {saveWeeklyDataMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                'Save Data'
+              )}
+            </Button>
           </div>
         </div>
+
+        {/* Success Message */}
+        {showSuccessMessage && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-green-800">
+                  Data saved successfully! All your entries have been recorded.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {selectedWeek && (
           <>
@@ -224,8 +285,8 @@ export default function DataEntry() {
                                       <Input
                                         type="number"
                                         step="0.01"
-                                        value={existingEntry?.actualValue?.toString() || ''}
-                                        onChange={(e) => handleDataChange(kpi.id, e.target.value)}
+                                        value={formData[kpi.id] || ''}
+                                        onChange={(e) => handleInputChange(kpi.id, e.target.value)}
                                         placeholder={`Actual (${kpi.unitType.replace('_', ' ')})`}
                                         className="w-full"
                                       />
@@ -253,19 +314,24 @@ export default function DataEntry() {
               ))}
             </div>
 
-            {/* Save Notice */}
-            <Card className="bg-gradient-to-br from-green-50 to-emerald-100 border-green-200">
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-3">
-                  <div className="flex-shrink-0">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  </div>
-                  <p className="text-sm text-green-800">
-                    <strong>Auto-save enabled:</strong> Your data changes are automatically saved as you type.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Bottom Save Button */}
+            <div className="flex justify-center">
+              <Button 
+                onClick={handleSaveData}
+                disabled={saveWeeklyDataMutation.isPending || !selectedWeekId}
+                className="bg-blue-600 hover:bg-blue-700 px-8 py-3 text-lg"
+                size="lg"
+              >
+                {saveWeeklyDataMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Saving Data...
+                  </>
+                ) : (
+                  'Save All Data'
+                )}
+              </Button>
+            </div>
           </>
         )}
       </div>
