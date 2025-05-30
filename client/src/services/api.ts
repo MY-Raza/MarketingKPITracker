@@ -211,7 +211,31 @@ class ApiClient {
     if (includeInactive) params.append('include_inactive', 'true');
     
     const query = params.toString();
-    return this.get(`/api/cvj-stages${query ? '?' + query : ''}`);
+    const response = await this.get(`/api/cvj-stages${query ? '?' + query : ''}`);
+    
+    // If hierarchy was requested but not returned, construct it from separate API calls
+    if (includeHierarchy && Array.isArray(response) && response.length > 0 && !response[0].subCategories) {
+      console.log('API Client: Hierarchy not returned, constructing from separate calls...');
+      
+      // Get subcategories and KPIs separately
+      const subcategories = await this.get('/api/subcategories');
+      const kpis = await this.get('/api/kpis');
+      
+      // Build hierarchy manually
+      const stagesWithHierarchy = response.map(stage => ({
+        ...stage,
+        subCategories: subcategories
+          .filter((sub: any) => sub.cvjStageId === stage.id)
+          .map((sub: any) => ({
+            ...sub,
+            kpis: kpis.filter((kpi: any) => kpi.subCategoryId === sub.id)
+          }))
+      }));
+      
+      return stagesWithHierarchy;
+    }
+    
+    return response;
   }
 
   async getCvjStage(id: string): Promise<any> {

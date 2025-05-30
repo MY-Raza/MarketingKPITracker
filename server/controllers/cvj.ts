@@ -16,11 +16,6 @@ router.get(
     const includeInactive = req.query.include_inactive === 'true';
     const includeHierarchy = req.query.include_hierarchy === 'true';
     
-    console.log('CVJ Controller: Query params:', req.query);
-    console.log('CVJ Controller: includeInactive:', includeInactive);
-    console.log('CVJ Controller: includeHierarchy:', includeHierarchy);
-    console.log('CVJ Controller: Processing request...');
-
     if (includeHierarchy) {
       console.log('CVJ Controller: includeHierarchy is true, fetching hierarchy data...');
       const stagesWithHierarchy = await storage.getCvjStagesWithHierarchy();

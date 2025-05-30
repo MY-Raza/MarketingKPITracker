@@ -1,0 +1,67 @@
+Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+api.ts:22 API Base URL: 
+admin.tsx:47 Admin - CVJ Stages data: []
+admin.tsx:48 Admin - CVJ Stages loading: true
+api.ts:40 API Client: Adding JWT token to headers
+api.ts:40 API Client: Adding JWT token to headers
+admin.tsx:47 Admin - CVJ Stages data: (8) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+admin.tsx:48 Admin - CVJ Stages loading: false
+admin:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was receivedUnderstand this error
+admin.tsx:47 Admin - CVJ Stages data: (8) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+admin.tsx:48 Admin - CVJ Stages loading: false
+admin.tsx:47 Admin - CVJ Stages data: (8) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+admin.tsx:48 Admin - CVJ Stages loading: false
+admin.tsx:47 Admin - CVJ Stages data: (8) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+admin.tsx:48 Admin - CVJ Stages loading: false
+admin.tsx:47 Admin - CVJ Stages data: (8) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+admin.tsx:48 Admin - CVJ Stages loading: false
+admin.tsx:47 Admin - CVJ Stages data: (8) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+admin.tsx:48 Admin - CVJ Stages loading: false
+admin.tsx:47 Admin - CVJ Stages data: (8) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]0: {id: '1a44ebbf-dd3b-4b97-83da-1b19b9ca48a8', name: 'Aware', displayOrder: 1, colorCode: 'from-blue-500 to-blue-600', isActive: true, …}1: {id: 'f07a932e-2c1d-4467-8622-f934a216e7d7', name: 'Engage', displayOrder: 2, colorCode: 'from-green-500 to-green-600', isActive: true, …}2: {id: 'c21d4d61-b514-47be-b04c-243fc7a49aca', name: 'Subscribe', displayOrder: 3, colorCode: 'from-purple-500 to-purple-600', isActive: true, …}3: {id: 'e8abd62a-4c6b-44b3-8627-47ce0e250262', name: 'Convert', displayOrder: 4, colorCode: 'from-orange-500 to-orange-600', isActive: true, …}4: {id: '18456c65-b952-49f0-b336-ff5f62925f96', name: 'Excite', displayOrder: 5, colorCode: 'from-pink-500 to-pink-600', isActive: true, …}5: {id: 'a04d4778-35f3-4b19-99a6-552d3c4e371a', name: 'Ascend', displayOrder: 6, colorCode: 'from-indigo-500 to-indigo-600', isActive: true, …}6: {id: '182b2b94-abba-4b92-8a82-b567d4443809', name: 'Advocate', displayOrder: 7, colorCode: 'from-emerald-500 to-emerald-600', isActive: true, …}7: {id: '3112e1fc-9865-43f2-81fb-0a440e12fda3', name: 'Promote', displayOrder: 8, colorCode: 'from-red-500 to-red-600', isActive: true, …}length: 8[[Prototype]]: Array(0)
+admin.tsx:48 Admin - CVJ Stages loading: false
+admin.tsx:47 Admin - CVJ Stages data: (8) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]0: {id: '1a44ebbf-dd3b-4b97-83da-1b19b9ca48a8', name: 'Aware', displayOrder: 1, colorCode: 'from-blue-500 to-blue-600', isActive: true, …}1: {id: 'f07a932e-2c1d-4467-8622-f934a216e7d7', name: 'Engage', displayOrder: 2, colorCode: 'from-green-500 to-green-600', isActive: true, …}2: {id: 'c21d4d61-b514-47be-b04c-243fc7a49aca', name: 'Subscribe', displayOrder: 3, colorCode: 'from-purple-500 to-purple-600', isActive: true, …}3: {id: 'e8abd62a-4c6b-44b3-8627-47ce0e250262', name: 'Convert', displayOrder: 4, colorCode: 'from-orange-500 to-orange-600', isActive: true, …}4: {id: '18456c65-b952-49f0-b336-ff5f62925f96', name: 'Excite', displayOrder: 5, colorCode: 'from-pink-500 to-pink-600', isActive: true, …}5: {id: 'a04d4778-35f3-4b19-99a6-552d3c4e371a', name: 'Ascend', displayOrder: 6, colorCode: 'from-indigo-500 to-indigo-600', isActive: true, …}6: {id: '182b2b94-abba-4b92-8a82-b567d4443809', name: 'Advocate', displayOrder: 7, colorCode: 'from-emerald-500 to-emerald-600', isActive: true, …}7: {id: '3112e1fc-9865-43f2-81fb-0a440e12fda3', name: 'Promote', displayOrder: 8, colorCode: 'from-red-500 to-red-600', isActive: true, …}length: 8[[Prototype]]: Array(0)
+admin.tsx:48 Admin - CVJ Stages loading: false
+@radix-ui_react-dialog.js?v=ab2438ae:340 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ @radix-ui_react-dialog.js?v=ab2438ae:340
+commitHookEffectListMount @ chunk-WERSD76P.js?v=ab2438ae:16915
+commitPassiveMountOnFiber @ chunk-WERSD76P.js?v=ab2438ae:18156
+commitPassiveMountEffects_complete @ chunk-WERSD76P.js?v=ab2438ae:18129
+commitPassiveMountEffects_begin @ chunk-WERSD76P.js?v=ab2438ae:18119
+commitPassiveMountEffects @ chunk-WERSD76P.js?v=ab2438ae:18109
+flushPassiveEffectsImpl @ chunk-WERSD76P.js?v=ab2438ae:19490
+flushPassiveEffects @ chunk-WERSD76P.js?v=ab2438ae:19447
+commitRootImpl @ chunk-WERSD76P.js?v=ab2438ae:19416
+commitRoot @ chunk-WERSD76P.js?v=ab2438ae:19277
+performSyncWorkOnRoot @ chunk-WERSD76P.js?v=ab2438ae:18895
+flushSyncCallbacks @ chunk-WERSD76P.js?v=ab2438ae:9119
+(anonymous) @ chunk-WERSD76P.js?v=ab2438ae:18627Understand this warning
+api.ts:40 API Client: Adding JWT token to headers
+admin.tsx:47 Admin - CVJ Stages data: (8) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]0: {id: '1a44ebbf-dd3b-4b97-83da-1b19b9ca48a8', name: 'Aware', displayOrder: 1, colorCode: 'from-blue-500 to-blue-600', isActive: true, …}1: {id: 'f07a932e-2c1d-4467-8622-f934a216e7d7', name: 'Engage', displayOrder: 2, colorCode: 'from-green-500 to-green-600', isActive: true, …}2: {id: 'c21d4d61-b514-47be-b04c-243fc7a49aca', name: 'Subscribe', displayOrder: 3, colorCode: 'from-purple-500 to-purple-600', isActive: true, …}3: {id: 'e8abd62a-4c6b-44b3-8627-47ce0e250262', name: 'Convert', displayOrder: 4, colorCode: 'from-orange-500 to-orange-600', isActive: true, …}4: {id: '18456c65-b952-49f0-b336-ff5f62925f96', name: 'Excite', displayOrder: 5, colorCode: 'from-pink-500 to-pink-600', isActive: true, …}5: {id: 'a04d4778-35f3-4b19-99a6-552d3c4e371a', name: 'Ascend', displayOrder: 6, colorCode: 'from-indigo-500 to-indigo-600', isActive: true, …}6: {id: '182b2b94-abba-4b92-8a82-b567d4443809', name: 'Advocate', displayOrder: 7, colorCode: 'from-emerald-500 to-emerald-600', isActive: true, …}7: {id: '3112e1fc-9865-43f2-81fb-0a440e12fda3', name: 'Promote', displayOrder: 8, colorCode: 'from-red-500 to-red-600', isActive: true, …}length: 8[[Prototype]]: Array(0)
+admin.tsx:48 Admin - CVJ Stages loading: false
+admin.tsx:222 Week creation failed: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+onError @ admin.tsx:222
+execute @ @tanstack_react-query.js?v=ab2438ae:1254
+await in execute
+mutate @ @tanstack_react-query.js?v=ab2438ae:2630
+(anonymous) @ @tanstack_react-query.js?v=ab2438ae:3295
+(anonymous) @ admin.tsx:264
+handleSubmit @ admin.tsx:1039
+callCallback2 @ chunk-WERSD76P.js?v=ab2438ae:3674
+invokeGuardedCallbackDev @ chunk-WERSD76P.js?v=ab2438ae:3699
+invokeGuardedCallback @ chunk-WERSD76P.js?v=ab2438ae:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-WERSD76P.js?v=ab2438ae:3736
+executeDispatch @ chunk-WERSD76P.js?v=ab2438ae:7014
+processDispatchQueueItemsInOrder @ chunk-WERSD76P.js?v=ab2438ae:7034
+processDispatchQueue @ chunk-WERSD76P.js?v=ab2438ae:7043
+dispatchEventsForPlugins @ chunk-WERSD76P.js?v=ab2438ae:7051
+(anonymous) @ chunk-WERSD76P.js?v=ab2438ae:7174
+batchedUpdates$1 @ chunk-WERSD76P.js?v=ab2438ae:18913
+batchedUpdates @ chunk-WERSD76P.js?v=ab2438ae:3579
+dispatchEventForPluginEventSystem @ chunk-WERSD76P.js?v=ab2438ae:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-WERSD76P.js?v=ab2438ae:5478
+dispatchEvent @ chunk-WERSD76P.js?v=ab2438ae:5472
+dispatchDiscreteEvent @ chunk-WERSD76P.js?v=ab2438ae:5449Understand this error
+admin.tsx:47 Admin - CVJ Stages data: (8) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]0: {id: '1a44ebbf-dd3b-4b97-83da-1b19b9ca48a8', name: 'Aware', displayOrder: 1, colorCode: 'from-blue-500 to-blue-600', isActive: true, …}1: {id: 'f07a932e-2c1d-4467-8622-f934a216e7d7', name: 'Engage', displayOrder: 2, colorCode: 'from-green-500 to-green-600', isActive: true, …}2: {id: 'c21d4d61-b514-47be-b04c-243fc7a49aca', name: 'Subscribe', displayOrder: 3, colorCode: 'from-purple-500 to-purple-600', isActive: true, …}3: {id: 'e8abd62a-4c6b-44b3-8627-47ce0e250262', name: 'Convert', displayOrder: 4, colorCode: 'from-orange-500 to-orange-600', isActive: true, …}4: {id: '18456c65-b952-49f0-b336-ff5f62925f96', name: 'Excite', displayOrder: 5, colorCode: 'from-pink-500 to-pink-600', isActive: true, …}5: {id: 'a04d4778-35f3-4b19-99a6-552d3c4e371a', name: 'Ascend', displayOrder: 6, colorCode: 'from-indigo-500 to-indigo-600', isActive: true, …}6: {id: '182b2b94-abba-4b92-8a82-b567d4443809', name: 'Advocate', displayOrder: 7, colorCode: 'from-emerald-500 to-emerald-600', isActive: true, …}7: {id: '3112e1fc-9865-43f2-81fb-0a440e12fda3', name: 'Promote', displayOrder: 8, colorCode: 'from-red-500 to-red-600', isActive: true, …}length: 8[[Prototype]]: Array(0)
+admin.tsx:48 Admin - CVJ Stages loading: false
+admin.tsx:47 Admin - CVJ Stages data: (8) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]0: {id: '1a44ebbf-dd3b-4b97-83da-1b19b9ca48a8', name: 'Aware', displayOrder: 1, colorCode: 'from-blue-500 to-blue-600', isActive: true, …}1: {id: 'f07a932e-2c1d-4467-8622-f934a216e7d7', name: 'Engage', displayOrder: 2, colorCode: 'from-green-500 to-green-600', isActive: true, …}2: {id: 'c21d4d61-b514-47be-b04c-243fc7a49aca', name: 'Subscribe', displayOrder: 3, colorCode: 'from-purple-500 to-purple-600', isActive: true, …}3: {id: 'e8abd62a-4c6b-44b3-8627-47ce0e250262', name: 'Convert', displayOrder: 4, colorCode: 'from-orange-500 to-orange-600', isActive: true, …}4: {id: '18456c65-b952-49f0-b336-ff5f62925f96', name: 'Excite', displayOrder: 5, colorCode: 'from-pink-500 to-pink-600', isActive: true, …}5: {id: 'a04d4778-35f3-4b19-99a6-552d3c4e371a', name: 'Ascend', displayOrder: 6, colorCode: 'from-indigo-500 to-indigo-600', isActive: true, …}6: {id: '182b2b94-abba-4b92-8a82-b567d4443809', name: 'Advocate', displayOrder: 7, colorCode: 'from-emerald-500 to-emerald-600', isActive: true, …}7: {id: '3112e1fc-9865-43f2-81fb-0a440e12fda3', name: 'Promote', displayOrder: 8, colorCode: 'from-red-500 to-red-600', isActive: true, …}length: 8[[Prototype]]: Array(0)
+admin.tsx:48 Admin - CVJ Stages loading: false
