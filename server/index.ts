@@ -96,7 +96,7 @@ app.post("/api/kpis", async (req, res) => {
   }
 });
 
-app.patch("/api/kpis/:id", async (req, res) => {
+app.put("/api/kpis/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const { name, description, unitType, defaultMonthlyTargetValue } = req.body;
@@ -308,7 +308,7 @@ app.post("/api/weeks", async (req, res) => {
   }
 });
 
-app.patch("/api/weeks/:id", async (req, res) => {
+app.put("/api/weeks/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const { year, weekNumber, month, startDateString, endDateString } = req.body;
@@ -376,7 +376,7 @@ app.post("/api/sub-categories", async (req, res) => {
   }
 });
 
-app.patch("/api/sub-categories/:id", async (req, res) => {
+app.put("/api/sub-categories/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const { name, stageId, displayOrder } = req.body;
