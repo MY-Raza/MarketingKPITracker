@@ -372,7 +372,17 @@ app.post("/api/weeks", async (req, res) => {
 app.put("/api/weeks/:id", async (req, res) => {
   try {
     const { id } = req.params;
+    console.log('Updating week with ID:', id);
+    console.log('Request body:', req.body);
+    
     const { year, weekNumber, month, startDateString, endDateString } = req.body;
+    
+    if (!year || !weekNumber || !month || !startDateString || !endDateString) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Missing required fields: year, weekNumber, month, startDateString, endDateString' 
+      });
+    }
     
     const updateData = {
       year: parseInt(year),
@@ -382,7 +392,9 @@ app.put("/api/weeks/:id", async (req, res) => {
       endDateString
     };
 
+    console.log('Update data:', updateData);
     const updatedWeek = await storage.updateWeek(id, updateData);
+    console.log('Updated week result:', updatedWeek);
     res.json(updatedWeek);
   } catch (error) {
     console.error('Error updating week:', error);
