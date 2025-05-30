@@ -24,7 +24,7 @@ import {
   type RefreshToken,
   type InsertRefreshToken
 } from "@shared/schema";
-import { db } from "./db";
+import { db, withRetry } from "./db";
 import { eq, and, desc, asc, sql, inArray } from "drizzle-orm";
 
 export interface IStorage {
@@ -282,17 +282,19 @@ export class DatabaseStorage implements IStorage {
 
   // Weekly Data Entry operations
   async getWeeklyDataEntries(filters?: { weekId?: string; kpiId?: string; monthId?: string }): Promise<WeeklyDataEntry[]> {
-    let query = db.select().from(weeklyDataEntries);
-    
-    if (filters?.weekId) {
-      query = query.where(eq(weeklyDataEntries.weekId, filters.weekId));
-    }
-    
-    if (filters?.kpiId) {
-      query = query.where(eq(weeklyDataEntries.kpiId, filters.kpiId));
-    }
-    
-    return await query.orderBy(desc(weeklyDataEntries.createdAt));
+    return await withRetry(async () => {
+      let query = db.select().from(weeklyDataEntries);
+      
+      if (filters?.weekId) {
+        query = query.where(eq(weeklyDataEntries.weekId, filters.weekId));
+      }
+      
+      if (filters?.kpiId) {
+        query = query.where(eq(weeklyDataEntries.kpiId, filters.kpiId));
+      }
+      
+      return await query.orderBy(desc(weeklyDataEntries.createdAt));
+    });
   }
 
   async getWeeklyDataEntryById(id: string): Promise<WeeklyDataEntry | undefined> {
@@ -348,17 +350,19 @@ export class DatabaseStorage implements IStorage {
 
   // Monthly Target operations
   async getMonthlyKpiTargets(filters?: { kpiId?: string; monthId?: string }): Promise<MonthlyKpiTarget[]> {
-    let query = db.select().from(monthlyKpiTargets);
-    
-    if (filters?.kpiId) {
-      query = query.where(eq(monthlyKpiTargets.kpiId, filters.kpiId));
-    }
-    
-    if (filters?.monthId) {
-      query = query.where(eq(monthlyKpiTargets.monthId, filters.monthId));
-    }
-    
-    return await query.orderBy(desc(monthlyKpiTargets.monthId));
+    return await withRetry(async () => {
+      let query = db.select().from(monthlyKpiTargets);
+      
+      if (filters?.kpiId) {
+        query = query.where(eq(monthlyKpiTargets.kpiId, filters.kpiId));
+      }
+      
+      if (filters?.monthId) {
+        query = query.where(eq(monthlyKpiTargets.monthId, filters.monthId));
+      }
+      
+      return await query.orderBy(desc(monthlyKpiTargets.monthId));
+    });
   }
 
   async getMonthlyKpiTargetById(id: string): Promise<MonthlyKpiTarget | undefined> {
