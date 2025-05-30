@@ -89,6 +89,23 @@ router.put(
   })
 );
 
+// POST-based update to avoid routing conflicts
+router.post(
+  "/:id/update",
+  authenticateToken,
+  validateParams(weeklyDataValidators.params),
+  validateRequest(weeklyDataValidators.update),
+  asyncHandler(async (req: Request, res: Response) => {
+    const existingWeeklyData = await storage.getWeeklyDataEntryById(req.params.id);
+    if (!existingWeeklyData) {
+      throw new ApiError("Weekly data entry not found", 404);
+    }
+
+    const updatedWeeklyData = await storage.updateWeeklyDataEntry(req.params.id, req.body);
+    res.json(successResponse(updatedWeeklyData, "Weekly data entry updated successfully"));
+  })
+);
+
 // Delete weekly data entry
 router.delete(
   "/:id",
