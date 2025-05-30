@@ -37,19 +37,51 @@ export default function Admin() {
   const [adminTab, setAdminTab] = useState<'kpis' | 'targets' | 'weeks' | 'subcategories'>('kpis');
   const [selectedMonthId, setSelectedMonthId] = useState<string>('2025-05');
 
-  // Fetch all admin data from single endpoint
-  const { data: adminData, isLoading: isLoadingAdmin } = useQuery({
-    queryKey: ['/api/admin/data'],
-    queryFn: () => apiClient.get('/api/admin/data')
+  // Fetch data from multiple working endpoints
+  const { data: basicStages = [] } = useQuery({
+    queryKey: ['/api/cvj-stages'],
+    queryFn: () => apiClient.getCvjStages(false, false)
   });
 
-  // Extract data from admin response
-  const cvjStages = adminData?.cvjStages || [];
-  const weeks = adminData?.weeks || [];
-  const monthlyTargets = adminData?.monthlyTargets || [];
-  const allKpisFromAdmin = adminData?.allKpis || [];
+  const { data: subcategories = [] } = useQuery({
+    queryKey: ['/api/subcategories'],
+    queryFn: () => apiClient.get('/api/subcategories')
+  });
 
-  console.log('Admin - All data loaded:', { cvjStages: cvjStages.length, weeks: weeks.length, monthlyTargets: monthlyTargets.length });
+  const { data: kpisData = [] } = useQuery({
+    queryKey: ['/api/kpis'],
+    queryFn: () => apiClient.get('/api/kpis')
+  });
+
+  const { data: weeks = [] } = useQuery({
+    queryKey: ['/api/analytics/weeks'],
+    queryFn: () => apiClient.getWeeks()
+  });
+
+  const { data: monthlyTargets = [] } = useQuery({
+    queryKey: ['/api/monthly-targets'],
+    queryFn: () => apiClient.getMonthlyTargets()
+  });
+
+  // Build hierarchy manually on client side
+  const cvjStages = basicStages.map(stage => ({
+    ...stage,
+    subCategories: subcategories
+      .filter(sub => sub.cvjStageId === stage.id)
+      .map(sub => ({
+        ...sub,
+        kpis: kpisData.filter(kpi => kpi.subCategoryId === sub.id)
+      }))
+      .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
+  })).sort((a, b) => a.displayOrder - b.displayOrder);
+
+  console.log('Admin - Data loaded:', { 
+    stages: basicStages.length, 
+    subcategories: subcategories.length, 
+    kpis: kpisData.length,
+    weeks: weeks.length, 
+    monthlyTargets: monthlyTargets.length 
+  });
   
   // Modal states
   const [isKpiModalOpen, setIsKpiModalOpen] = useState(false);
@@ -65,7 +97,7 @@ export default function Admin() {
   const [selectedStageForSubcategory, setSelectedStageForSubcategory] = useState<string>('');
 
   // Get all KPIs
-  const allKpis = allKpisFromAdmin;
+  const allKpis = kpisData;
 
   // Get unique months
   const uniqueMonths = [
