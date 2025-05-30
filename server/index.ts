@@ -370,18 +370,16 @@ app.post("/api/weeks", async (req, res) => {
 });
 
 // POST endpoint for updating weeks (to avoid Vite routing conflicts)
-app.post("/api/weeks/:id/update", async (req, res) => {
+app.post("/api/weeks/update", async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id, year, weekNumber, month, startDateString, endDateString } = req.body;
     console.log('Updating week with ID:', id);
     console.log('Request body:', req.body);
     
-    const { year, weekNumber, month, startDateString, endDateString } = req.body;
-    
-    if (!year || !weekNumber || !month || !startDateString || !endDateString) {
+    if (!id || !year || !weekNumber || !month || !startDateString || !endDateString) {
       return res.status(400).json({ 
         success: false, 
-        message: 'Missing required fields: year, weekNumber, month, startDateString, endDateString' 
+        message: 'Missing required fields: id, year, weekNumber, month, startDateString, endDateString' 
       });
     }
     

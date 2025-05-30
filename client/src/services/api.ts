@@ -486,7 +486,7 @@ class ApiClient {
   }
 
   async updateWeek(id: string, data: any): Promise<any> {
-    return this.post(`/api/weeks/${id}/update`, data);
+    return this.post(`/api/weeks/update`, { id, ...data });
   }
 
   async deleteWeek(id: string): Promise<void> {
