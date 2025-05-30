@@ -330,6 +330,71 @@ app.patch("/api/weekly-data/:id", async (req, res) => {
   }
 });
 
+// Bulk weekly data endpoint for data entry form - using direct path to bypass Vite
+app.post("/weekly-data-save", async (req, res) => {
+  try {
+    console.log('Bulk weekly data request:', req.body);
+    const { entries } = req.body;
+    
+    if (!entries || !Array.isArray(entries)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'entries array is required' 
+      });
+    }
+
+    const results = [];
+    
+    for (const entry of entries) {
+      const { weekId, kpiId, actualValue, notes } = entry;
+      
+      if (!weekId || !kpiId) {
+        console.error('Missing required fields in entry:', entry);
+        continue;
+      }
+
+      let numericActualValue = null;
+      if (actualValue !== undefined && actualValue !== null && actualValue !== '') {
+        numericActualValue = parseFloat(actualValue);
+        if (isNaN(numericActualValue)) {
+          console.error('Invalid actualValue in entry:', entry);
+          continue;
+        }
+      }
+
+      try {
+        // Check if entry already exists
+        const existingEntries = await storage.getWeeklyDataEntries();
+        const existingEntry = existingEntries.find(e => e.weekId === weekId && e.kpiId === kpiId);
+        
+        let result;
+        if (existingEntry) {
+          result = await storage.updateWeeklyDataEntry(existingEntry.id, {
+            actualValue: numericActualValue,
+            notes: notes || null
+          });
+        } else {
+          result = await storage.createWeeklyDataEntry({
+            weekId,
+            kpiId,
+            actualValue: numericActualValue,
+            notes: notes || null
+          });
+        }
+        results.push(result);
+      } catch (entryError) {
+        console.error('Error processing entry:', entry, entryError);
+        // Continue with other entries
+      }
+    }
+    
+    res.json({ success: true, data: results });
+  } catch (error) {
+    console.error('Error in bulk weekly data operation:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
 // Weeks endpoints
 app.get("/api/weeks", async (req, res) => {
   try {

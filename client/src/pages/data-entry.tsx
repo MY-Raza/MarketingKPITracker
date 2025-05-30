@@ -70,27 +70,8 @@ export default function DataEntry() {
   // Mutation for bulk saving weekly data
   const saveWeeklyDataMutation = useMutation({
     mutationFn: async (entries: { weekId: string; kpiId: string; actualValue: number | null }[]) => {
-      const promises = entries.map(async (data) => {
-        const existingEntry = weeklyData.find(
-          (entry: any) => entry.weekId === data.weekId && entry.kpiId === data.kpiId
-        );
-        
-        if (existingEntry) {
-          return apiClient.updateWeeklyDataEntry(existingEntry.id, {
-            weekId: data.weekId,
-            kpiId: data.kpiId,
-            actualValue: data.actualValue
-          });
-        } else {
-          return apiClient.createWeeklyDataEntry({
-            weekId: data.weekId,
-            kpiId: data.kpiId,
-            actualValue: data.actualValue
-          });
-        }
-      });
-      
-      return Promise.all(promises);
+      // Use the bulk endpoint which should handle create/update logic
+      return apiClient.bulkUpsertWeeklyData(entries);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/weekly-data'] });
