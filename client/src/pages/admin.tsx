@@ -757,10 +757,18 @@ export default function Admin() {
                           </p>
                         </div>
                         <div className="flex space-x-2">
-                          <Button variant="outline" size="sm">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => openSubcategoryModal(subCategory, stage.id)}
+                          >
                             <Edit className="w-3 h-3" />
                           </Button>
-                          <Button variant="destructive" size="sm">
+                          <Button 
+                            variant="destructive" 
+                            size="sm"
+                            onClick={() => handleDeleteSubcategory(subCategory.id)}
+                          >
                             <Trash2 className="w-3 h-3" />
                           </Button>
                         </div>
