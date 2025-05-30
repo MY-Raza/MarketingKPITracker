@@ -331,7 +331,7 @@ app.patch("/api/weekly-data/:id", async (req, res) => {
 });
 
 // Bulk weekly data endpoint for data entry form - using direct path to bypass Vite
-app.post("/weekly-data-save", async (req, res) => {
+app.post("/data-save", async (req, res) => {
   try {
     console.log('Bulk weekly data request:', req.body);
     const { entries } = req.body;

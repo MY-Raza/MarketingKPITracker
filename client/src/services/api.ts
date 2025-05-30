@@ -329,7 +329,7 @@ class ApiClient {
   }
 
   async bulkUpsertWeeklyData(entries: any[]): Promise<any[]> {
-    return this.post('/weekly-data-save', { entries });
+    return this.post('/data-save', { entries });
   }
 
   async getWeeklyDataForWeek(weekId: string): Promise<any> {
