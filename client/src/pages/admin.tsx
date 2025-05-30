@@ -223,11 +223,21 @@ export default function Admin() {
   });
 
   const updateWeekMutation = useMutation({
-    mutationFn: ({ id, ...weekData }: any) => apiClient.updateWeek(id, weekData),
+    mutationFn: ({ id, ...weekData }: any) => {
+      console.log('Frontend: Updating week with ID:', id);
+      console.log('Frontend: Week data:', weekData);
+      return apiClient.updateWeek(id, weekData);
+    },
     onSuccess: () => {
+      console.log('Frontend: Week update successful');
       queryClient.invalidateQueries({ queryKey: ['/api/analytics/weeks'] });
       setIsWeekModalOpen(false);
       setEditingWeek(undefined);
+    },
+    onError: (error: any) => {
+      console.error('Frontend: Week update failed:', error);
+      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to update week';
+      alert(errorMessage);
     }
   });
 
