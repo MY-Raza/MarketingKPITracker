@@ -58,12 +58,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           apiClient.setTokens(tokens);
           setUser(userData);
 
-          // Verify the token is still valid by getting user profile
-          try {
-            const currentUser = await apiClient.get('/api/auth/me');
-            setUser(currentUser);
-          } catch (error) {
-            // Token is invalid, clear storage
+          // For now, just use the stored user data since we have basic auth
+          const storedUser = localStorage.getItem(USER_STORAGE_KEY);
+          if (storedUser) {
+            setUser(JSON.parse(storedUser) as User);
+          } else {
             clearAuthData();
           }
         }
@@ -106,7 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string): Promise<void> => {
     setIsLoading(true);
     try {
-      const response = await apiClient.post('/api/auth/login', {
+      const response = await apiClient.post('/api/login', {
         email,
         password,
       });
