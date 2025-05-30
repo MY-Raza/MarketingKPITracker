@@ -42,13 +42,27 @@ export interface KPI {
   isActive: boolean;
 }
 
+export enum WeekType {
+  STANDARD = 'standard',
+  PROMOTIONAL = 'promotional',
+  HOLIDAY = 'holiday',
+  QUARTERLY = 'quarterly',
+  CUSTOM = 'custom',
+}
+
 export interface Week {
-  id: string; // e.g., "Week 20 [05/01-05/09]" - Generated from dates and week number
+  id: string; // e.g., "Week 20 [05/01-05/09]" or custom name
+  displayName?: string; // Optional custom display name, falls back to auto-generated if null
   year: number;
-  weekNumber: number; // ISO 8601 week number
+  weekNumber: number; // Can be manually set or auto-calculated
+  isCustomWeekNumber: boolean; // Track if week number was manually set
   month: number; // 1-indexed month, derived from start date
   startDateString: string; // "YYYY-MM-DD"
   endDateString: string; // "YYYY-MM-DD"
+  weekType: WeekType;
+  description?: string; // Optional description for the week/period
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface WeeklyDataEntry {
@@ -118,4 +132,9 @@ export interface WeekFormData {
     originalId?: string; // Present if editing, used to find the week to update
     startDate: string; // YYYY-MM-DD
     endDate: string; // YYYY-MM-DD
+    displayName?: string; // Optional custom display name
+    weekNumber?: string; // Optional manual week number (input as string)
+    isCustomWeekNumber?: boolean; // Whether to use manual week number
+    weekType: WeekType; // Type of week/period
+    description?: string; // Optional description
 }

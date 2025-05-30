@@ -65,17 +65,26 @@ export const kpis = pgTable("kpis", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Week types for categorizing different types of reporting periods
+export const weekTypeEnum = pgEnum("week_type", ["standard", "promotional", "holiday", "quarterly", "custom"]);
+
 // Weeks
 export const weeks = pgTable("weeks", {
-  id: text("id").primaryKey(), // e.g., "Week 20 [05/01-05/09]"
+  id: text("id").primaryKey(), // e.g., "Week 20 [05/01-05/09]" or custom name
+  displayName: text("display_name"), // Optional custom display name, falls back to auto-generated if null
   year: integer("year").notNull(),
-  weekNumber: integer("week_number").notNull(),
-  month: integer("month").notNull(),
+  weekNumber: integer("week_number").notNull(), // Can be manually set or auto-calculated
+  isCustomWeekNumber: boolean("is_custom_week_number").default(false).notNull(), // Track if week number was manually set
+  month: integer("month").notNull(), // Derived from start date
   startDateString: text("start_date_string").notNull(), // YYYY-MM-DD
   endDateString: text("end_date_string").notNull(), // YYYY-MM-DD
+  weekType: weekTypeEnum("week_type").default("standard").notNull(),
+  description: text("description"), // Optional description for the week/period
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({
-  uniqueYearWeek: unique().on(table.year, table.weekNumber),
+  // Remove unique constraint to allow custom week numbering
+  // uniqueYearWeek: unique().on(table.year, table.weekNumber),
 }));
 
 // Weekly Data Entries
