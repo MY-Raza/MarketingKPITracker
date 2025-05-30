@@ -260,15 +260,19 @@ export default function Admin() {
   });
 
   const handleAddOrUpdateWeek = useCallback((formData: WeekFormData) => {
-    const startDate = new Date(formData.startDate);
-    const endDate = new Date(formData.endDate);
-    const weekData = createWeekObjectFromFormData(startDate, endDate);
+    // Send simplified data structure that matches the API expectations
+    const weekData = {
+      startDate: formData.startDate,
+      endDate: formData.endDate,
+      displayName: formData.displayName || undefined,
+      originalId: formData.originalId
+    };
 
     if (formData.originalId) {
-      const { id, ...weekDataWithoutId } = weekData;
-      updateWeekMutation.mutate({ ...weekDataWithoutId, id: formData.originalId });
+      // Update existing week
+      updateWeekMutation.mutate(weekData);
     } else {
-      // Create new week - server will handle duplicate validation and show appropriate error
+      // Create new week
       createWeekMutation.mutate(weekData);
     }
   }, [createWeekMutation, updateWeekMutation]);
