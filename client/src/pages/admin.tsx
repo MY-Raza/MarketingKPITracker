@@ -43,6 +43,10 @@ export default function Admin() {
     queryFn: () => apiClient.getCvjStages(true, false)
   });
 
+  // Debug logging
+  console.log('Admin - CVJ Stages data:', cvjStages);
+  console.log('Admin - CVJ Stages loading:', isLoadingStages);
+
   // Fetch weeks from API using authenticated client
   const { data: weeks = [], isLoading: isLoadingWeeks } = useQuery({
     queryKey: ['/api/analytics/weeks'],
@@ -544,10 +548,10 @@ export default function Admin() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-slate-200">
-                      {filteredTargets.map(target => {
-                        const kpi = allKpis.find(k => k.id === target.kpiId);
-                        const stage = cvjStages.find(s => 
-                          s.subCategories.some(sub => sub.kpis.some(k => k.id === target.kpiId))
+                      {(filteredTargets || []).map(target => {
+                        const kpi = allKpis?.find(k => k.id === target.kpiId);
+                        const stage = cvjStages?.find(s => 
+                          s.subCategories?.some(sub => sub.kpis?.some(k => k.id === target.kpiId))
                         );
                         return (
                           <tr key={target.id} className="hover:bg-slate-50">
@@ -636,7 +640,7 @@ export default function Admin() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-slate-200">
-                      {weeks.map(week => (
+                      {(weeks || []).map(week => (
                         <tr key={week.id} className="hover:bg-slate-50">
                           <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-900">
                             {week.id}
