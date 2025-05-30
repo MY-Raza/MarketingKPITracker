@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Info, Calendar, Database, Loader2 } from "lucide-react";
+import { Info, Calendar, Database, Loader2, X } from "lucide-react";
 import { 
   CVJStageName,
   type Week, 
@@ -76,7 +76,7 @@ export default function DataEntry() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/weekly-data'] });
       setShowSuccessMessage(true);
-      setTimeout(() => setShowSuccessMessage(false), 3000);
+      setTimeout(() => setShowSuccessMessage(false), 20000);
     },
     onError: (error: any) => {
       console.error('Failed to save weekly data:', error);
@@ -92,7 +92,16 @@ export default function DataEntry() {
   });
 
   const handleInputChange = useCallback((kpiId: string, value: string) => {
-    setFormData(prev => ({ ...prev, [kpiId]: value }));
+    // Only allow numbers, decimal points, and empty string
+    const numericValue = value.replace(/[^0-9.]/g, '');
+    
+    // Prevent multiple decimal points
+    const parts = numericValue.split('.');
+    const sanitizedValue = parts.length > 2 
+      ? parts[0] + '.' + parts.slice(1).join('') 
+      : numericValue;
+    
+    setFormData(prev => ({ ...prev, [kpiId]: sanitizedValue }));
   }, []);
 
   const handleSaveData = useCallback(() => {
@@ -152,9 +161,16 @@ export default function DataEntry() {
       <div className="space-y-8">
         {/* Success Message Banner */}
         {showSuccessMessage && (
-          <div className="fixed top-4 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2">
+          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-3 min-w-80">
             <div className="w-2 h-2 bg-green-300 rounded-full animate-pulse"></div>
-            <span className="font-medium">Data saved successfully!</span>
+            <span className="font-medium flex-1">Data saved successfully!</span>
+            <button 
+              onClick={() => setShowSuccessMessage(false)}
+              className="text-white hover:text-green-200 transition-colors"
+              aria-label="Close success message"
+            >
+              <X className="h-4 w-4" />
+            </button>
           </div>
         )}
         
