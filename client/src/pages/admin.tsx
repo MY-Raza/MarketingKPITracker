@@ -41,17 +41,17 @@ export default function Admin() {
   const { data: cvjStages = [], isLoading: isLoadingStages } = useQuery({
     queryKey: ['/api/cvj-stages-hierarchy'],
     queryFn: () => apiClient.get('/api/cvj-stages-hierarchy')
-  });
+  }) as { data: CVJStage[], isLoading: boolean };
 
   const { data: weeks = [], isLoading: isLoadingWeeks } = useQuery({
     queryKey: ['/api/analytics/weeks'],
     queryFn: () => apiClient.getWeeks()
-  });
+  }) as { data: Week[], isLoading: boolean };
 
   const { data: monthlyTargets = [], isLoading: isLoadingTargets } = useQuery({
     queryKey: ['/api/monthly-targets'],
     queryFn: () => apiClient.getMonthlyTargets()
-  });
+  }) as { data: MonthlyKpiTarget[], isLoading: boolean };
 
   console.log('Admin - Data loaded:', { 
     cvjStages: cvjStages.length,
@@ -254,7 +254,7 @@ export default function Admin() {
     const weekData = createWeekObjectFromFormData(startDate, endDate);
 
     if (formData.originalId) {
-      updateWeekMutation.mutate({ id: formData.originalId, ...weekData });
+      updateWeekMutation.mutate({ ...weekData, id: formData.originalId });
     } else {
       // Create new week - server will handle duplicate validation and show appropriate error
       createWeekMutation.mutate(weekData);
