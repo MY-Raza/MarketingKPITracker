@@ -858,6 +858,31 @@ export default function Admin() {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Subcategory Modal */}
+      <Dialog open={isSubcategoryModalOpen} onOpenChange={setIsSubcategoryModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editingSubcategory ? 'Edit Subcategory' : 'Add New Subcategory'}</DialogTitle>
+          </DialogHeader>
+          <SubcategoryForm
+            initialData={editingSubcategory ? {
+              id: editingSubcategory.id,
+              name: editingSubcategory.name,
+              stageId: editingSubcategory.cvjStageId,
+              displayOrder: editingSubcategory.displayOrder?.toString() || '1'
+            } : {
+              id: undefined,
+              name: '',
+              stageId: selectedStageForSubcategory,
+              displayOrder: '1'
+            }}
+            onSubmit={handleSubcategoryFormSubmit}
+            onCancel={() => setIsSubcategoryModalOpen(false)}
+            cvjStages={cvjStages}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
