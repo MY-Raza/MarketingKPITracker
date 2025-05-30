@@ -116,6 +116,19 @@ app.put("/api/kpis/:id", async (req, res) => {
   }
 });
 
+// DELETE endpoint that the API client expects
+app.delete("/api/kpis/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await storage.deleteKpi(id);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting KPI:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Keep the POST endpoint for compatibility
 app.post("/api/kpis/:id/delete", async (req, res) => {
   try {
     const { id } = req.params;
@@ -329,6 +342,19 @@ app.put("/api/weeks/:id", async (req, res) => {
   }
 });
 
+// DELETE endpoint that the API client expects
+app.delete("/api/weeks/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await storage.deleteWeek(id);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting week:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Keep the POST endpoint for compatibility
 app.post("/api/weeks/:id/delete", async (req, res) => {
   try {
     const { id } = req.params;
@@ -392,6 +418,19 @@ app.put("/api/sub-categories/:id", async (req, res) => {
   }
 });
 
+// DELETE endpoint that the API client expects
+app.delete("/api/sub-categories/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await storage.deleteSubCategory(id);
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error deleting subcategory:", error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Keep the POST endpoint for compatibility
 app.post("/api/sub-categories/:id/delete", async (req, res) => {
   try {
     const { id } = req.params;
