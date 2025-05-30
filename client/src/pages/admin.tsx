@@ -400,7 +400,7 @@ export default function Admin() {
               <p className="text-slate-600">Organize and manage key performance indicators across customer journey stages</p>
             </div>
 
-            {cvjStages.map(stage => (
+            {(cvjStages || []).map(stage => (
               <Card key={stage.id} className="overflow-hidden border-0 shadow-lg">
                 <CardHeader className={`bg-gradient-to-r ${stageColorMap[stage.name]} text-white`}>
                   <div className="flex items-center justify-between">
@@ -685,7 +685,7 @@ export default function Admin() {
               <p className="text-slate-600">Manage subcategories within each CVJ stage</p>
             </div>
 
-            {cvjStages.map(stage => (
+            {(cvjStages || []).map(stage => (
               <Card key={stage.id} className="overflow-hidden border-0 shadow-lg">
                 <CardHeader className={`bg-gradient-to-r ${stageColorMap[stage.name]} text-white`}>
                   <div className="flex items-center justify-between">
