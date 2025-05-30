@@ -855,11 +855,13 @@ export default function Admin() {
             initialData={editingWeek ? {
               originalId: editingWeek.id,
               startDate: editingWeek.startDateString,
-              endDate: editingWeek.endDateString
+              endDate: editingWeek.endDateString,
+              displayName: editingWeek.displayName
             } : {
               originalId: undefined,
               startDate: '',
-              endDate: ''
+              endDate: '',
+              displayName: ''
             }}
             onSubmit={handleAddOrUpdateWeek}
             onCancel={() => setIsWeekModalOpen(false)}
@@ -1104,35 +1106,12 @@ interface WeekFormProps {
 
 function WeekForm({ initialData, onSubmit, onCancel, existingWeeks }: WeekFormProps) {
   const [formData, setFormData] = useState<WeekFormData>({
-    ...initialData,
-    weekType: initialData.weekType || WeekType.STANDARD,
-    isCustomWeekNumber: initialData.isCustomWeekNumber || false
+    ...initialData
   });
-  const [errors, setErrors] = useState<{ startDate?: string; endDate?: string; duplicate?: string; weekNumber?: string }>({});
-
-  // Auto-calculate week number when dates change (unless custom week number is enabled)
-  React.useEffect(() => {
-    if (formData.startDate && !formData.isCustomWeekNumber) {
-      const startDate = new Date(formData.startDate);
-      const weekNumber = getISOWeek(startDate);
-      setFormData(prev => ({ ...prev, weekNumber: weekNumber.toString() }));
-    }
-  }, [formData.startDate, formData.isCustomWeekNumber]);
-
-  const getISOWeek = (date: Date): number => {
-    const target = new Date(date.valueOf());
-    const dayNr = (date.getDay() + 6) % 7;
-    target.setDate(target.getDate() - dayNr + 3);
-    const firstThursday = target.valueOf();
-    target.setMonth(0, 1);
-    if (target.getDay() !== 4) {
-      target.setMonth(0, 1 + ((4 - target.getDay()) + 7) % 7);
-    }
-    return 1 + Math.ceil((firstThursday - target.valueOf()) / 604800000);
-  };
+  const [errors, setErrors] = useState<{ startDate?: string; endDate?: string; duplicate?: string }>({});
 
   const validateForm = (): boolean => {
-    const newErrors: { startDate?: string; endDate?: string; duplicate?: string; weekNumber?: string } = {};
+    const newErrors: { startDate?: string; endDate?: string; duplicate?: string } = {};
 
     if (!formData.startDate) {
       newErrors.startDate = 'Start date is required';
@@ -1142,40 +1121,27 @@ function WeekForm({ initialData, onSubmit, onCancel, existingWeeks }: WeekFormPr
       newErrors.endDate = 'End date is required';
     }
 
-    if (formData.isCustomWeekNumber && (!formData.weekNumber || isNaN(parseInt(formData.weekNumber)))) {
-      newErrors.weekNumber = 'Valid week number is required when using custom week numbering';
-    }
-
     if (formData.startDate && formData.endDate) {
       const startDate = new Date(formData.startDate);
       const endDate = new Date(formData.endDate);
 
-      // Check if end date is before start date
-      if (endDate < startDate) {
-        newErrors.endDate = 'End date cannot be before start date';
+      if (endDate <= startDate) {
+        newErrors.endDate = 'End date must be after start date';
       }
 
-      // Removed the 14-day limit for more flexibility in custom periods
-      const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-      if (daysDiff > 365) { // Only limit to 1 year maximum
-        newErrors.endDate = 'Period duration cannot exceed 365 days';
-      }
-
-      // Only check for duplicates if not using custom week numbers (more flexibility)
-      if (!formData.isCustomWeekNumber && daysDiff >= 0 && daysDiff <= 365) {
-        const weekNumber = getISOWeek(startDate);
-        const year = startDate.getFullYear();
+      // Check for overlaps with existing weeks (excluding the current week if editing)
+      const currentWeekId = formData.originalId;
+      const hasOverlap = existingWeeks.some(week => {
+        if (currentWeekId && week.id === currentWeekId) return false;
         
-        const duplicateWeek = existingWeeks.find(week => 
-          week.year === year && 
-          week.weekNumber === weekNumber &&
-          week.id !== formData.originalId &&
-          !week.isCustomWeekNumber // Only check against non-custom weeks
-        );
+        const existingStart = new Date(week.startDateString);
+        const existingEnd = new Date(week.endDateString);
+        
+        return (startDate <= existingEnd && endDate >= existingStart);
+      });
 
-        if (duplicateWeek) {
-          newErrors.duplicate = `Week ${weekNumber} of ${year} already exists`;
-        }
+      if (hasOverlap) {
+        newErrors.duplicate = 'This period overlaps with an existing week';
       }
     }
 
@@ -1198,7 +1164,6 @@ function WeekForm({ initialData, onSubmit, onCancel, existingWeeks }: WeekFormPr
         </div>
       )}
       
-      {/* Basic Date Fields */}
       <div>
         <Label htmlFor="startDate">Start Date</Label>
         <Input
@@ -1207,7 +1172,9 @@ function WeekForm({ initialData, onSubmit, onCancel, existingWeeks }: WeekFormPr
           value={formData.startDate}
           onChange={(e) => {
             setFormData({ ...formData, startDate: e.target.value });
-            if (errors.startDate) setErrors({ ...errors, startDate: undefined });
+            if (errors.startDate || errors.duplicate) {
+              setErrors({ ...errors, startDate: undefined, duplicate: undefined });
+            }
           }}
           className={errors.startDate ? 'border-red-500' : ''}
           required
@@ -1225,7 +1192,9 @@ function WeekForm({ initialData, onSubmit, onCancel, existingWeeks }: WeekFormPr
           value={formData.endDate}
           onChange={(e) => {
             setFormData({ ...formData, endDate: e.target.value });
-            if (errors.endDate) setErrors({ ...errors, endDate: undefined });
+            if (errors.endDate || errors.duplicate) {
+              setErrors({ ...errors, endDate: undefined, duplicate: undefined });
+            }
           }}
           className={errors.endDate ? 'border-red-500' : ''}
           required
@@ -1235,7 +1204,6 @@ function WeekForm({ initialData, onSubmit, onCancel, existingWeeks }: WeekFormPr
         )}
       </div>
 
-      {/* Enhanced Customization Fields */}
       <div>
         <Label htmlFor="displayName">Custom Display Name (Optional)</Label>
         <Input
@@ -1243,93 +1211,16 @@ function WeekForm({ initialData, onSubmit, onCancel, existingWeeks }: WeekFormPr
           type="text"
           value={formData.displayName || ''}
           onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
-          placeholder="e.g., 'Holiday Week', 'Q1 Launch Period'"
+          placeholder="e.g., Holiday Campaign Week, Q1 Launch Period"
         />
-        <p className="text-xs text-slate-500 mt-1">Leave empty to auto-generate from dates</p>
-      </div>
-
-      <div>
-        <Label htmlFor="weekType">Period Type</Label>
-        <Select
-          value={formData.weekType}
-          onValueChange={(value) => setFormData({ ...formData, weekType: value as WeekType })}
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={WeekType.STANDARD}>Standard Week</SelectItem>
-            <SelectItem value={WeekType.PROMOTIONAL}>Promotional Period</SelectItem>
-            <SelectItem value={WeekType.HOLIDAY}>Holiday Period</SelectItem>
-            <SelectItem value={WeekType.QUARTERLY}>Quarterly Period</SelectItem>
-            <SelectItem value={WeekType.CUSTOM}>Custom Period</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Custom Week Number Section */}
-      <div className="space-y-3">
-        <div className="flex items-center space-x-2">
-          <input
-            type="checkbox"
-            id="customWeekNumber"
-            checked={formData.isCustomWeekNumber || false}
-            onChange={(e) => {
-              setFormData({ 
-                ...formData, 
-                isCustomWeekNumber: e.target.checked,
-                weekNumber: e.target.checked ? formData.weekNumber : getISOWeek(new Date(formData.startDate || Date.now())).toString()
-              });
-              if (errors.weekNumber) setErrors({ ...errors, weekNumber: undefined });
-            }}
-            className="rounded border-slate-300"
-          />
-          <Label htmlFor="customWeekNumber">Use custom week number</Label>
-        </div>
-
-        {formData.isCustomWeekNumber && (
-          <div>
-            <Label htmlFor="weekNumber">Week Number</Label>
-            <Input
-              id="weekNumber"
-              type="number"
-              min="1"
-              max="53"
-              value={formData.weekNumber || ''}
-              onChange={(e) => {
-                setFormData({ ...formData, weekNumber: e.target.value });
-                if (errors.weekNumber) setErrors({ ...errors, weekNumber: undefined });
-              }}
-              className={errors.weekNumber ? 'border-red-500' : ''}
-              placeholder="Enter custom week number"
-            />
-            {errors.weekNumber && (
-              <p className="text-sm text-red-600 mt-1">{errors.weekNumber}</p>
-            )}
-          </div>
-        )}
-
-        {!formData.isCustomWeekNumber && formData.startDate && (
-          <p className="text-xs text-slate-500">
-            Auto-calculated week number: {getISOWeek(new Date(formData.startDate))}
-          </p>
-        )}
-      </div>
-
-      <div>
-        <Label htmlFor="description">Description (Optional)</Label>
-        <Textarea
-          id="description"
-          value={formData.description || ''}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          placeholder="Add notes about this period..."
-          rows={2}
-        />
+        <p className="text-xs text-slate-500 mt-1">
+          Leave empty to auto-generate from dates. You can include week numbers in the name if needed.
+        </p>
       </div>
 
       <div className="flex space-x-2 pt-4">
         <Button type="submit" className="flex-1">
-          {initialData.originalId ? 'Update Period' : 'Add Period'}
+          {initialData.originalId ? 'Update Week' : 'Add Week'}
         </Button>
         <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
           Cancel
