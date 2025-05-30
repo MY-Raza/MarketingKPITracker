@@ -15,9 +15,15 @@ router.get(
   asyncHandler(async (req: Request, res: Response) => {
     const includeInactive = req.query.include_inactive === 'true';
     const includeHierarchy = req.query.include_hierarchy === 'true';
+    
+    console.log('CVJ Controller: Query params:', req.query);
+    console.log('CVJ Controller: includeInactive:', includeInactive);
+    console.log('CVJ Controller: includeHierarchy:', includeHierarchy);
 
     if (includeHierarchy) {
+      console.log('CVJ Controller: includeHierarchy is true, fetching hierarchy data...');
       const stagesWithHierarchy = await storage.getCvjStagesWithHierarchy();
+      console.log('CVJ Controller: Raw hierarchy data rows:', stagesWithHierarchy.length);
       
       // Group the flat data into hierarchical structure
       const stagesMap = new Map();
