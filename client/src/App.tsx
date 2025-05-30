@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth, withAuth } from "./hooks/use-auth";
 import { queryClient } from "./lib/queryClient";
+import { useEffect } from "react";
 import Login from "./pages/login";
 import NotFound from "./pages/not-found";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,21 @@ const ProtectedAdmin = withAuth(Admin);
 function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const [location] = useLocation();
   const { user } = useAuth();
+
+  // Handle navigation with data refresh
+  const handleNavigation = (href: string) => {
+    // If we're already on the target page, refresh the data
+    if (location === href || (href === '/dashboard' && (location === '/' || location === '/dashboard'))) {
+      // Clear all React Query cache to force fresh data
+      queryClient.clear();
+      // Force a page refresh to ensure completely fresh data
+      window.location.reload();
+    } else {
+      // Clear cache before navigating to ensure fresh data
+      queryClient.clear();
+    }
+    onClose(); // Close mobile sidebar
+  };
 
   const navigation = [
     { 
@@ -115,13 +131,16 @@ function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
               
               return (
                 <Link key={item.name} href={item.href}>
-                  <div className={`
-                    group flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 cursor-pointer
-                    ${isActive 
-                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg' 
-                      : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
-                    }
-                  `}>
+                  <div 
+                    className={`
+                      group flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 cursor-pointer
+                      ${isActive 
+                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg' 
+                        : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+                      }
+                    `}
+                    onClick={() => handleNavigation(item.href)}
+                  >
                     <Icon className={`
                       mr-3 h-5 w-5 transition-colors
                       ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'}
