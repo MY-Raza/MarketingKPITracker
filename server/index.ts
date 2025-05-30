@@ -38,6 +38,32 @@ app.get("/api/cvj-stages", async (req, res) => {
   }
 });
 
+// CVJ Stages with hierarchy
+app.get("/api/cvj-stages-hierarchy", async (req, res) => {
+  try {
+    const stages = await storage.getCvjStages();
+    const subCategories = await storage.getSubCategories();
+    const kpis = await storage.getKpis();
+    
+    // Build hierarchy structure
+    const stagesWithHierarchy = stages.map(stage => ({
+      ...stage,
+      subCategories: subCategories
+        .filter(sub => sub.cvjStageId === stage.id)
+        .map(sub => ({
+          ...sub,
+          kpis: kpis.filter(kpi => kpi.subCategoryId === sub.id)
+        }))
+        .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
+    })).sort((a, b) => a.displayOrder - b.displayOrder);
+    
+    res.json(stagesWithHierarchy);
+  } catch (error) {
+    console.error('Error fetching CVJ stages hierarchy:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
 // KPIs endpoints  
 app.get("/api/kpis", async (req, res) => {
   try {
@@ -314,7 +340,17 @@ app.post("/api/weeks/:id/delete", async (req, res) => {
   }
 });
 
-// Subcategories endpoints
+// Subcategories endpoints (both with and without dash for compatibility)
+app.get("/api/subcategories", async (req, res) => {
+  try {
+    const subCategories = await storage.getSubCategories();
+    res.json(subCategories);
+  } catch (error) {
+    console.error("Error fetching subcategories:", error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
 app.get("/api/sub-categories", async (req, res) => {
   try {
     const subCategories = await storage.getSubCategories();
