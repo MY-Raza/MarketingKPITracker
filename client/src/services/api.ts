@@ -478,19 +478,19 @@ class ApiClient {
 
   // Weeks Management
   async getWeeks(): Promise<any[]> {
-    return this.get('/api/analytics/weeks');
+    return this.get('/api/weeks');
   }
 
   async createWeek(data: any): Promise<any> {
-    return this.post('/api/analytics/weeks', data);
+    return this.post('/api/weeks', data);
   }
 
   async updateWeek(id: string, data: any): Promise<any> {
-    return this.put(`/api/analytics/weeks/${id}`, data);
+    return this.put(`/api/weeks/${id}`, data);
   }
 
   async deleteWeek(id: string): Promise<void> {
-    return this.post('/api/admin/delete-week', { weekId: id });
+    return this.post(`/api/weeks/${id}/delete`);
   }
 
   // Subcategories
