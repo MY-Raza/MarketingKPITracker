@@ -194,6 +194,54 @@ app.post("/api/monthly-targets", async (req, res) => {
   }
 });
 
+// PUT endpoint for updating monthly targets
+app.put("/api/monthly-targets/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { kpiId, monthId, targetValue } = req.body;
+    
+    if (!kpiId || !monthId || targetValue === undefined) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Missing required fields: kpiId, monthId, targetValue' 
+      });
+    }
+
+    const numericTargetValue = parseFloat(targetValue);
+    if (isNaN(numericTargetValue)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'targetValue must be a valid number' 
+      });
+    }
+
+    const updateData = {
+      kpiId,
+      monthId,
+      targetValue: numericTargetValue
+    };
+
+    const result = await storage.updateMonthlyKpiTarget(id, updateData);
+    res.json(result);
+  } catch (error) {
+    console.error('Error updating monthly target:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// DELETE endpoint for monthly targets
+app.delete("/api/monthly-targets/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await storage.deleteMonthlyKpiTarget(id);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting monthly target:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Keep the POST endpoint for compatibility
 app.post("/api/monthly-targets/:id/delete", async (req, res) => {
   try {
     const { id } = req.params;
