@@ -380,10 +380,20 @@ app.post("/api/login", async (req, res) => {
     // For now, accept any login for testing
     const tokens = {
       accessToken: 'test-access-token',
-      refreshToken: 'test-refresh-token'
+      refreshToken: 'test-refresh-token',
+      expiresIn: 3600
     };
 
-    res.json({ tokens, user: { id: 'test-user-id', email, role: 'admin' } });
+    res.json({ 
+      tokens, 
+      user: { 
+        id: 'test-user-id', 
+        email, 
+        firstName: 'Test',
+        lastName: 'User',
+        role: 'admin' 
+      } 
+    });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });

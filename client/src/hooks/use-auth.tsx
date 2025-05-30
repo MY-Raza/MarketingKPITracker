@@ -5,8 +5,8 @@ import { apiClient } from "../services/api";
 interface User {
   id: string;
   email: string;
-  firstName: string;
-  lastName: string;
+  firstName?: string;
+  lastName?: string;
   role: string;
 }
 
@@ -40,53 +40,28 @@ const USER_STORAGE_KEY = "marketing_kpi_user";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [, setLocation] = useLocation();
+
+  const isAuthenticated = !!user;
 
   // Initialize auth state from localStorage
   useEffect(() => {
-    const initializeAuth = async () => {
+    const storedUser = localStorage.getItem(USER_STORAGE_KEY);
+    const storedTokens = localStorage.getItem(TOKEN_STORAGE_KEY);
+    
+    if (storedUser && storedTokens) {
       try {
-        const storedTokens = localStorage.getItem(TOKEN_STORAGE_KEY);
-        const storedUser = localStorage.getItem(USER_STORAGE_KEY);
-
-        if (storedTokens && storedUser) {
-          const tokens = JSON.parse(storedTokens);
-          const userData = JSON.parse(storedUser);
-
-          // Set tokens in API client
-          apiClient.setTokens(tokens);
-          setUser(userData);
-
-          // For now, just use the stored user data since we have basic auth
-          const storedUser = localStorage.getItem(USER_STORAGE_KEY);
-          if (storedUser) {
-            setUser(JSON.parse(storedUser) as User);
-          } else {
-            clearAuthData();
-          }
-        }
+        const userData = JSON.parse(storedUser) as User;
+        const tokens = JSON.parse(storedTokens) as AuthTokens;
+        setUser(userData);
+        apiClient.setTokens(tokens);
       } catch (error) {
-        console.error('Error initializing auth:', error);
+        console.error('Error parsing stored auth data:', error);
         clearAuthData();
-      } finally {
-        setIsLoading(false);
       }
-    };
-
-    initializeAuth();
-  }, []);
-
-  // Setup token refresh interval
-  useEffect(() => {
-    if (user && isAuthenticated) {
-      const interval = setInterval(() => {
-        refreshTokenSilently();
-      }, 14 * 60 * 1000); // Refresh every 14 minutes (tokens expire in 15 minutes)
-
-      return () => clearInterval(interval);
     }
-  }, [user]);
+  }, []);
 
   const clearAuthData = () => {
     localStorage.removeItem(TOKEN_STORAGE_KEY);
@@ -108,11 +83,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await apiClient.post('/api/login', {
         email,
         password,
-      });
+      }) as any;
 
-      const { user, tokens } = response;
-      saveAuthData(user, tokens);
-      setLocation('/dashboard');
+      if (response && response.user && response.tokens) {
+        saveAuthData(response.user, response.tokens);
+        setLocation('/dashboard');
+      } else {
+        throw new Error('Invalid response from server');
+      }
     } catch (error: any) {
       throw new Error(error.message || 'Failed to login');
     } finally {
@@ -123,15 +101,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (data: RegisterData): Promise<void> => {
     setIsLoading(true);
     try {
-      console.log("Starting registration with data:", data);
-      const response = await apiClient.register(data);
-      console.log("Registration response:", response);
-
-      const { user, tokens } = response;
-      saveAuthData(user, tokens);
-      setLocation('/dashboard');
+      const response = await apiClient.post('/api/register', data) as any;
+      
+      if (response && response.user && response.tokens) {
+        saveAuthData(response.user, response.tokens);
+        setLocation('/dashboard');
+      } else {
+        throw new Error('Invalid response from server');
+      }
     } catch (error: any) {
-      console.error("Registration error in hook:", error);
       throw new Error(error.message || 'Failed to register');
     } finally {
       setIsLoading(false);
@@ -139,74 +117,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async (): Promise<void> => {
-    try {
-      const storedTokens = localStorage.getItem(TOKEN_STORAGE_KEY);
-      if (storedTokens) {
-        const tokens = JSON.parse(storedTokens);
-        await apiClient.post('/api/auth/logout', {
-          refreshToken: tokens.refreshToken,
-        });
-      }
-    } catch (error) {
-      console.error('Error during logout:', error);
-    } finally {
-      clearAuthData();
-      setLocation('/login');
-    }
-  };
-
-  const refreshTokenSilently = async (): Promise<void> => {
-    try {
-      const storedTokens = localStorage.getItem(TOKEN_STORAGE_KEY);
-      if (!storedTokens) return;
-
-      const tokens = JSON.parse(storedTokens);
-      const response = await apiClient.post('/api/auth/refresh', {
-        refreshToken: tokens.refreshToken,
-      });
-
-      const newTokens = response;
-      const updatedTokens = {
-        ...tokens,
-        ...newTokens,
-      };
-
-      localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify(updatedTokens));
-      apiClient.setTokens(updatedTokens);
-    } catch (error) {
-      console.error('Error refreshing token:', error);
-      // If refresh fails, logout the user
-      await logout();
-    }
+    clearAuthData();
+    setLocation('/login');
   };
 
   const refreshToken = async (): Promise<void> => {
-    await refreshTokenSilently();
-  };
-
-  const isAuthenticated = !!user;
-
-  const contextValue: AuthContextType = {
-    user,
-    isAuthenticated,
-    isLoading,
-    login,
-    register,
-    logout,
-    refreshToken,
+    // Simplified refresh - just keep current session for now
   };
 
   return (
-    <AuthContext.Provider value={contextValue}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated,
+        isLoading,
+        login,
+        register,
+        logout,
+        refreshToken,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 }
 
-export function useAuth(): AuthContextType {
+export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }
@@ -237,18 +176,4 @@ export function withAuth<P extends object>(WrappedComponent: React.ComponentType
 
     return <WrappedComponent {...props} />;
   };
-}
-
-// Hook for admin-only access
-export function useRequireAdmin() {
-  const { user, isAuthenticated } = useAuth();
-  const [, setLocation] = useLocation();
-
-  useEffect(() => {
-    if (isAuthenticated && user?.role !== 'ADMIN') {
-      setLocation('/dashboard');
-    }
-  }, [user, isAuthenticated, setLocation]);
-
-  return user?.role === 'ADMIN';
 }
