@@ -254,7 +254,8 @@ export default function Admin() {
     const weekData = createWeekObjectFromFormData(startDate, endDate);
 
     if (formData.originalId) {
-      updateWeekMutation.mutate({ ...weekData, id: formData.originalId });
+      const { id, ...weekDataWithoutId } = weekData;
+      updateWeekMutation.mutate({ ...weekDataWithoutId, id: formData.originalId });
     } else {
       // Create new week - server will handle duplicate validation and show appropriate error
       createWeekMutation.mutate(weekData);
