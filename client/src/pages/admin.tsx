@@ -15,7 +15,6 @@ import { SubcategoryForm } from '@/components/SubcategoryForm';
 import { 
   CVJStageName, 
   UnitType, 
-  WeekType,
   type CVJStage, 
   type KPI, 
   type Week, 
