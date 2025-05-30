@@ -106,7 +106,14 @@ export default function Dashboard() {
 
   const [selectedMonthId, setSelectedMonthId] = useState<string>(uniqueMonths[0]?.id || '2025-05');
 
-  const allKpis = useMemo(() => cvjStages.flatMap(stage => stage.subCategories.flatMap(sc => sc.kpis.filter(kpi => kpi.isActive))), [cvjStages]);
+  const allKpis = useMemo(() => {
+    if (!cvjStages || !Array.isArray(cvjStages)) return [];
+    return cvjStages.flatMap(stage => 
+      stage.subCategories?.flatMap(sc => 
+        sc.kpis?.filter(kpi => kpi.isActive) || []
+      ) || []
+    );
+  }, [cvjStages]);
 
   const getKpiById = (kpiId: string): KPI | undefined => {
     return allKpis.find(kpi => kpi.id === kpiId);

@@ -48,6 +48,7 @@ export interface IStorage {
   deleteCvjStage(id: string): Promise<void>;
   
   // Sub Category operations
+  getSubCategories(): Promise<SubCategory[]>;
   getSubCategoriesByStageId(stageId: string): Promise<SubCategory[]>;
   getSubCategoryById(id: string): Promise<SubCategory | undefined>;
   createSubCategory(subCategory: InsertSubCategory): Promise<SubCategory>;
@@ -172,6 +173,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Sub Category operations
+  async getSubCategories(): Promise<SubCategory[]> {
+    return await db
+      .select()
+      .from(subCategories)
+      .orderBy(asc(subCategories.displayOrder));
+  }
+
   async getSubCategoriesByStageId(stageId: string): Promise<SubCategory[]> {
     return await db
       .select()
