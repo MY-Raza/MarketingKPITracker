@@ -490,7 +490,10 @@ class ApiClient {
   }
 
   async deleteWeek(id: string): Promise<void> {
-    return this.post(`/api/weeks/${id}/delete`);
+    console.log('API Client: Deleting week with ID:', id);
+    const encodedId = encodeURIComponent(id);
+    console.log('API Client: Encoded ID:', encodedId);
+    return this.delete(`/api/weeks/${encodedId}`);
   }
 
   // Subcategories
