@@ -193,7 +193,7 @@ export default function DataEntry() {
                 <SelectContent>
                   {weeks.map(week => (
                     <SelectItem key={week.id} value={week.id}>
-                      {week.id}
+                      {week.displayName || week.id}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -250,7 +250,7 @@ export default function DataEntry() {
                   <Calendar className="h-8 w-8 text-indigo-600" />
                   <div>
                     <h2 className="text-xl font-semibold text-slate-900">
-                      Entering data for: {selectedWeek.id}
+                      Entering data for: {selectedWeek.displayName || selectedWeek.id}
                     </h2>
                     <p className="text-slate-600">
                       {selectedWeek.startDateString} to {selectedWeek.endDateString} • Month: {getMonthName(selectedWeek.year, selectedWeek.month)}
