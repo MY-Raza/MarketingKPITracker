@@ -496,7 +496,7 @@ app.post("/api/weeks", async (req, res) => {
       displayName: displayName || null,
       year,
       weekNumber,
-      month,
+      month: primaryMonth,
       startDateString: startDate,
       endDateString: endDate
     };
