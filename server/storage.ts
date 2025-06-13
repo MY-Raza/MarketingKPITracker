@@ -283,17 +283,26 @@ export class DatabaseStorage implements IStorage {
   // Weekly Data Entry operations
   async getWeeklyDataEntries(filters?: { weekId?: string; kpiId?: string; monthId?: string }): Promise<WeeklyDataEntry[]> {
     return await withRetry(async () => {
-      let query = db.select().from(weeklyDataEntries);
+      let baseQuery = db.select().from(weeklyDataEntries);
       
-      if (filters?.weekId) {
-        query = query.where(eq(weeklyDataEntries.weekId, filters.weekId));
+      if (filters?.weekId && filters?.kpiId) {
+        return await baseQuery
+          .where(and(
+            eq(weeklyDataEntries.weekId, filters.weekId),
+            eq(weeklyDataEntries.kpiId, filters.kpiId)
+          ))
+          .orderBy(desc(weeklyDataEntries.createdAt));
+      } else if (filters?.weekId) {
+        return await baseQuery
+          .where(eq(weeklyDataEntries.weekId, filters.weekId))
+          .orderBy(desc(weeklyDataEntries.createdAt));
+      } else if (filters?.kpiId) {
+        return await baseQuery
+          .where(eq(weeklyDataEntries.kpiId, filters.kpiId))
+          .orderBy(desc(weeklyDataEntries.createdAt));
       }
       
-      if (filters?.kpiId) {
-        query = query.where(eq(weeklyDataEntries.kpiId, filters.kpiId));
-      }
-      
-      return await query.orderBy(desc(weeklyDataEntries.createdAt));
+      return await baseQuery.orderBy(desc(weeklyDataEntries.createdAt));
     });
   }
 
@@ -351,17 +360,23 @@ export class DatabaseStorage implements IStorage {
   // Monthly Target operations
   async getMonthlyKpiTargets(filters?: { kpiId?: string; monthId?: string }): Promise<MonthlyKpiTarget[]> {
     return await withRetry(async () => {
-      let query = db.select().from(monthlyKpiTargets);
+      let baseQuery = db.select().from(monthlyKpiTargets);
       
-      if (filters?.kpiId) {
-        query = query.where(eq(monthlyKpiTargets.kpiId, filters.kpiId));
+      if (filters?.kpiId && filters?.monthId) {
+        return await baseQuery
+          .where(and(
+            eq(monthlyKpiTargets.kpiId, filters.kpiId),
+            eq(monthlyKpiTargets.monthId, filters.monthId)
+          ));
+      } else if (filters?.kpiId) {
+        return await baseQuery
+          .where(eq(monthlyKpiTargets.kpiId, filters.kpiId));
+      } else if (filters?.monthId) {
+        return await baseQuery
+          .where(eq(monthlyKpiTargets.monthId, filters.monthId));
       }
       
-      if (filters?.monthId) {
-        query = query.where(eq(monthlyKpiTargets.monthId, filters.monthId));
-      }
-      
-      return await query.orderBy(desc(monthlyKpiTargets.monthId));
+      return await baseQuery.orderBy(desc(monthlyKpiTargets.monthId));
     });
   }
 
