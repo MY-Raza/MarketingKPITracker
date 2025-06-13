@@ -268,7 +268,7 @@ export class DatabaseStorage implements IStorage {
   async updateWeek(id: string, week: Partial<InsertWeek>): Promise<Week> {
     const [updatedWeek] = await db
       .update(weeks)
-      .set(week)
+      .set({ ...week, updatedAt: new Date() })
       .where(eq(weeks.id, id))
       .returning();
     return updatedWeek;

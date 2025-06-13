@@ -22,6 +22,19 @@ app.use((req, res, next) => {
   next();
 });
 
+// Utility function for ISO week calculation
+const getISOWeek = (date: Date): number => {
+  const target = new Date(date.valueOf());
+  const dayNr = (date.getDay() + 6) % 7;
+  target.setDate(target.getDate() - dayNr + 3);
+  const firstThursday = target.valueOf();
+  target.setMonth(0, 1);
+  if (target.getDay() !== 4) {
+    target.setMonth(0, 1 + ((4 - target.getDay()) + 7) % 7);
+  }
+  return 1 + Math.ceil((firstThursday - target.valueOf()) / 604800000);
+};
+
 // Basic health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -467,18 +480,7 @@ app.post("/api/weeks", async (req, res) => {
     const year = startDateObj.getFullYear();
     const month = startDateObj.getMonth() + 1; // JavaScript months are 0-indexed
     
-    // Auto-calculate week number
-    const getISOWeek = (date: Date): number => {
-      const target = new Date(date.valueOf());
-      const dayNr = (date.getDay() + 6) % 7;
-      target.setDate(target.getDate() - dayNr + 3);
-      const firstThursday = target.valueOf();
-      target.setMonth(0, 1);
-      if (target.getDay() !== 4) {
-        target.setMonth(0, 1 + ((4 - target.getDay()) + 7) % 7);
-      }
-      return 1 + Math.ceil((firstThursday - target.valueOf()) / 604800000);
-    };
+    // Use the global getISOWeek function
     
     const weekNumber = getISOWeek(startDateObj);
     
@@ -514,23 +516,28 @@ app.post("/api/weeks", async (req, res) => {
 // POST endpoint for updating weeks (to avoid Vite routing conflicts)
 app.post("/api/weeks/update", async (req, res) => {
   try {
-    const { id, year, weekNumber, month, startDateString, endDateString } = req.body;
+    const { id, startDate, endDate, displayName } = req.body;
     console.log('Updating week with ID:', id);
     console.log('Request body:', req.body);
     
-    if (!id || !year || !weekNumber || !month || !startDateString || !endDateString) {
+    if (!id || !startDate || !endDate) {
       return res.status(400).json({ 
         success: false, 
-        message: 'Missing required fields: id, year, weekNumber, month, startDateString, endDateString' 
+        message: 'Missing required fields: id, startDate, endDate' 
       });
     }
     
+    // Convert to the format expected by storage layer
+    const startDateObj = new Date(startDate);
+    const endDateObj = new Date(endDate);
+    
     const updateData = {
-      year: parseInt(year),
-      weekNumber: parseInt(weekNumber),
-      month: parseInt(month),
-      startDateString,
-      endDateString
+      year: startDateObj.getFullYear(),
+      weekNumber: getISOWeek(startDateObj),
+      month: startDateObj.getMonth() + 1,
+      startDateString: startDate,
+      endDateString: endDate,
+      displayName: displayName || null
     };
 
     console.log('Update data:', updateData);
