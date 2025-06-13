@@ -683,7 +683,7 @@ export default function Admin() {
                       {(weeks || []).map(week => (
                         <tr key={week.id} className="hover:bg-slate-50">
                           <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-900">
-                            {week.id}
+                            {week.displayName || week.id}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-slate-700">
                             {week.startDateString} to {week.endDateString}
