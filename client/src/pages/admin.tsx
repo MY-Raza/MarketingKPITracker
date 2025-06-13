@@ -24,6 +24,7 @@ import {
   type WeekFormData
 } from '../types/kpi';
 import { createWeekObjectFromFormData } from '../constants/kpi';
+import { useRealtimeSync } from '../hooks/use-realtime-sync';
 
 // Helper functions
 const generateId = (): string => `id_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -35,6 +36,7 @@ const getMonthName = (year: number, month: number): string => {
 
 export default function Admin() {
   const queryClient = useQueryClient();
+  const { syncWeeksData, syncKpisData, syncMonthlyTargets, syncSubcategoriesData } = useRealtimeSync();
   const [adminTab, setAdminTab] = useState<'kpis' | 'targets' | 'weeks' | 'subcategories'>('kpis');
   const [selectedMonthId, setSelectedMonthId] = useState<string>('2025-05');
 
