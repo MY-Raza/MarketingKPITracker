@@ -68,9 +68,11 @@ function KpiStatusGauge({ value, target, title }: { value: number; target: numbe
 }
 
 export default function Dashboard() {
-  // Fetch all data from backend
+  const { syncAllData } = useRealtimeSync();
+  
+  // Fetch all data from backend with real-time synchronization
   const { data: cvjStages = [], isLoading: isLoadingStages } = useQuery<CVJStage[]>({
-    queryKey: ['/api/cvj-stages'],
+    queryKey: ['/api/cvj-stages-hierarchy'],
     queryFn: () => apiClient.getCvjStages(true, false),
   });
 
@@ -94,7 +96,28 @@ export default function Dashboard() {
 
   const uniqueMonths = useMemo(() => {
     const monthSet = new Set<string>();
-    weeks.forEach(week => monthSet.add(getMonthId(week.year, week.month)));
+    
+    // Calculate months from both start and end dates of weeks to handle multi-month periods
+    weeks.forEach(week => {
+      const startDate = new Date(week.startDateString);
+      const endDate = new Date(week.endDateString);
+      
+      // Add month from start date
+      monthSet.add(getMonthId(startDate.getFullYear(), startDate.getMonth() + 1));
+      
+      // Add month from end date if different
+      const endMonthId = getMonthId(endDate.getFullYear(), endDate.getMonth() + 1);
+      monthSet.add(endMonthId);
+      
+      // Add any months in between for very long periods
+      let current = new Date(startDate);
+      while (current <= endDate) {
+        monthSet.add(getMonthId(current.getFullYear(), current.getMonth() + 1));
+        current.setMonth(current.getMonth() + 1);
+      }
+    });
+    
+    // Add months from targets
     monthlyTargets.forEach(target => monthSet.add(target.monthId));
 
     const sortedMonthIds = Array.from(monthSet).sort((a,b) => b.localeCompare(a));
@@ -110,7 +133,14 @@ export default function Dashboard() {
     });
   }, [weeks, monthlyTargets]);
 
-  const [selectedMonthId, setSelectedMonthId] = useState<string>(uniqueMonths[0]?.id || '2025-05');
+  const [selectedMonthId, setSelectedMonthId] = useState<string>('');
+
+  // Auto-select the most recent month when uniqueMonths changes
+  React.useEffect(() => {
+    if (uniqueMonths.length > 0 && (!selectedMonthId || !uniqueMonths.find(m => m.id === selectedMonthId))) {
+      setSelectedMonthId(uniqueMonths[0].id);
+    }
+  }, [uniqueMonths, selectedMonthId]);
 
   const allKpis = useMemo(() => {
     if (!cvjStages || !Array.isArray(cvjStages)) return [];
@@ -133,13 +163,24 @@ export default function Dashboard() {
     const previousMonthId = getMonthId(previousMonthDate.getFullYear(), previousMonthDate.getMonth() + 1);
 
     return allKpis.map(kpi => {
-      const weeklyEntries = weeklyData.filter(entry => 
-        entry.kpiId === kpi.id && 
-        weeks.find(week => 
-          week.id === entry.weekId && 
-          getMonthId(week.year, week.month) === selectedMonthId
-        )
-      );
+      // Find weekly entries for this KPI that fall within the selected month
+      const weeklyEntries = weeklyData.filter(entry => {
+        if (entry.kpiId !== kpi.id) return false;
+        
+        const week = weeks.find(w => w.id === entry.weekId);
+        if (!week) return false;
+        
+        // Check if week overlaps with selected month
+        const startDate = new Date(week.startDateString);
+        const endDate = new Date(week.endDateString);
+        const [targetYear, targetMonth] = selectedMonthId.split('-').map(Number);
+        
+        // Check if week overlaps with target month
+        const monthStart = new Date(targetYear, targetMonth - 1, 1);
+        const monthEnd = new Date(targetYear, targetMonth, 0);
+        
+        return (startDate <= monthEnd) && (endDate >= monthStart);
+      });
 
       const summedActualValue = weeklyEntries.reduce((sum, entry) => 
         sum + (entry.actualValue || 0), 0
