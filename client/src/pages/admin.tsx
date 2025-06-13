@@ -45,7 +45,7 @@ export default function Admin() {
   }) as { data: CVJStage[], isLoading: boolean };
 
   const { data: weeks = [], isLoading: isLoadingWeeks } = useQuery({
-    queryKey: ['/api/analytics/weeks'],
+    queryKey: ['/api/weeks'],
     queryFn: () => apiClient.getWeeks()
   }) as { data: Week[], isLoading: boolean };
 
@@ -211,7 +211,7 @@ export default function Admin() {
   const createWeekMutation = useMutation({
     mutationFn: (weekData: any) => apiClient.createWeek(weekData),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/analytics/weeks'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/weeks'] });
       setIsWeekModalOpen(false);
       setEditingWeek(undefined);
     },
@@ -231,7 +231,7 @@ export default function Admin() {
     },
     onSuccess: () => {
       console.log('Frontend: Week update successful');
-      queryClient.invalidateQueries({ queryKey: ['/api/analytics/weeks'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/weeks'] });
       setIsWeekModalOpen(false);
       setEditingWeek(undefined);
     },
@@ -251,8 +251,8 @@ export default function Admin() {
     },
     onSuccess: () => {
       console.log('Frontend: Delete mutation successful, invalidating queries');
-      queryClient.invalidateQueries({ queryKey: ['/api/analytics/weeks'] });
-      queryClient.refetchQueries({ queryKey: ['/api/analytics/weeks'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/weeks'] });
+      queryClient.refetchQueries({ queryKey: ['/api/weeks'] });
     },
     onError: (error) => {
       console.error('Frontend: Delete mutation failed', error);

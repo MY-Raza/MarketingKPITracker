@@ -478,7 +478,11 @@ app.post("/api/weeks", async (req, res) => {
     }
 
     const year = startDateObj.getFullYear();
-    const month = startDateObj.getMonth() + 1; // JavaScript months are 0-indexed
+    
+    // For periods spanning multiple months, use the month that contains most of the period
+    const startMonth = startDateObj.getMonth() + 1;
+    const endMonth = endDateObj.getMonth() + 1;
+    const primaryMonth = startMonth; // For simplicity, use start month as primary
     
     // Use the global getISOWeek function
     
@@ -532,10 +536,15 @@ app.post("/api/weeks/update", async (req, res) => {
     const startDateObj = new Date(startDate);
     const endDateObj = new Date(endDate);
     
+    // For periods spanning multiple months, use the month that contains most of the period
+    const startMonth = startDateObj.getMonth() + 1;
+    const endMonth = endDateObj.getMonth() + 1;
+    const primaryMonth = startMonth; // For simplicity, use start month as primary
+    
     const updateData = {
       year: startDateObj.getFullYear(),
       weekNumber: getISOWeek(startDateObj),
-      month: startDateObj.getMonth() + 1,
+      month: primaryMonth,
       startDateString: startDate,
       endDateString: endDate,
       displayName: displayName || null
