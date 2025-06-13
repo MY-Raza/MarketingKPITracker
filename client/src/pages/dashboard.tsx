@@ -7,6 +7,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Info, TrendingUp, TrendingDown, Target, BarChart3 } from "lucide-react";
 import { useAuth } from '../hooks/use-auth';
 import { apiClient } from '../services/api';
+import { useRealtimeSync } from '../hooks/use-realtime-sync';
 import { 
   CVJStageName, 
   UnitType, 

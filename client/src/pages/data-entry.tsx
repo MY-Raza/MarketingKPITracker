@@ -15,6 +15,8 @@ import {
   type KPI 
 } from '../types/kpi';
 import { apiClient } from '../services/api';
+import { useRealtimeSync } from '../hooks/use-realtime-sync';
+import { MultiMonthPeriodAlert } from '../components/MultiMonthPeriodAlert';
 
 const getMonthName = (year: number, month: number): string => {
   const date = new Date(year, month - 1, 1);
@@ -23,6 +25,7 @@ const getMonthName = (year: number, month: number): string => {
 
 export default function DataEntry() {
   const queryClient = useQueryClient();
+  const { syncWeeklyData } = useRealtimeSync();
   const [selectedWeekId, setSelectedWeekId] = useState<string>('');
   const [formData, setFormData] = useState<{ [key: string]: string }>({});
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
@@ -74,7 +77,7 @@ export default function DataEntry() {
       return apiClient.bulkUpsertWeeklyData(entries);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/weekly-data'] });
+      syncWeeklyData();
       setShowSuccessMessage(true);
       setTimeout(() => setShowSuccessMessage(false), 20000);
     },
@@ -212,6 +215,15 @@ export default function DataEntry() {
             </Button>
           </div>
         </div>
+
+        {/* Multi-Month Period Alert */}
+        {selectedWeek && (
+          <MultiMonthPeriodAlert
+            startDate={selectedWeek.startDateString}
+            endDate={selectedWeek.endDateString}
+            weekName={selectedWeek.displayName || selectedWeek.id}
+          />
+        )}
 
         {/* Success Message */}
         {showSuccessMessage && (
