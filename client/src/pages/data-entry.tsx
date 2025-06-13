@@ -25,7 +25,7 @@ const getMonthName = (year: number, month: number): string => {
 
 export default function DataEntry() {
   const queryClient = useQueryClient();
-  const { syncWeeklyData } = useRealtimeSync();
+  const { syncWeeklyData, syncMonthlyTargets } = useRealtimeSync();
   const [selectedWeekId, setSelectedWeekId] = useState<string>('');
   const [formData, setFormData] = useState<{ [key: string]: string }>({});
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
@@ -46,6 +46,12 @@ export default function DataEntry() {
   const { data: weeklyData = [], isLoading: isLoadingWeeklyData } = useQuery({
     queryKey: ['/api/weekly-data'],
     queryFn: () => apiClient.getWeeklyData({}),
+  });
+
+  // Fetch monthly targets
+  const { data: monthlyTargets = [], isLoading: isLoadingTargets } = useQuery({
+    queryKey: ['/api/monthly-targets'],
+    queryFn: () => apiClient.getMonthlyTargets({}),
   });
 
   // Set default selected week when weeks are loaded
@@ -69,6 +75,34 @@ export default function DataEntry() {
   }, [selectedWeekId, weeklyData]);
 
   const selectedWeek = weeks.find(week => week.id === selectedWeekId);
+
+  // Helper function to get the appropriate target for a KPI
+  const getKpiTarget = (kpiId: string): { value: number | null; source: 'monthly' | 'default' } => {
+    if (!selectedWeek) return { value: null, source: 'default' };
+    
+    // Determine which month to check for targets based on selected week
+    const startDate = new Date(selectedWeek.startDateString);
+    const monthId = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}`;
+    
+    // Look for a monthly target for this KPI and month
+    const monthlyTarget = monthlyTargets.find(target => 
+      target.kpiId === kpiId && target.monthId === monthId
+    );
+    
+    if (monthlyTarget) {
+      return { value: monthlyTarget.targetValue, source: 'monthly' };
+    }
+    
+    // Fall back to default target
+    const kpi = cvjStages.flatMap(stage => 
+      stage.subCategories.flatMap(sub => sub.kpis)
+    ).find(k => k.id === kpiId);
+    
+    return { 
+      value: kpi?.defaultMonthlyTargetValue || null, 
+      source: 'default' 
+    };
+  };
 
   // Mutation for bulk saving weekly data
   const saveWeeklyDataMutation = useMutation({
@@ -144,7 +178,7 @@ export default function DataEntry() {
     [CVJStageName.PROMOTE]: 'from-red-500 to-red-600',
   };
 
-  const isLoading = isLoadingStages || isLoadingWeeks || isLoadingWeeklyData;
+  const isLoading = isLoadingStages || isLoadingWeeks || isLoadingWeeklyData || isLoadingTargets;
 
   if (isLoading) {
     return (
@@ -295,6 +329,8 @@ export default function DataEntry() {
                               entry => entry.weekId === selectedWeekId && entry.kpiId === kpi.id
                             );
 
+                            const target = getKpiTarget(kpi.id);
+
                             return (
                               <div key={kpi.id} className="group">
                                 <div className="bg-white border border-slate-200 rounded-xl p-4 hover:border-slate-300 hover:shadow-md transition-all duration-200">
@@ -329,9 +365,14 @@ export default function DataEntry() {
                                         <p className="text-xs text-slate-500 mt-2">{kpi.description}</p>
                                       )}
                                       
-                                      {kpi.defaultMonthlyTargetValue && (
+                                      {target.value && (
                                         <p className="text-xs text-slate-600 mt-1">
-                                          Monthly Target: {kpi.defaultMonthlyTargetValue.toLocaleString()}
+                                          {target.source === 'monthly' ? 'Monthly Target' : 'Default Target'}: {target.value.toLocaleString()}
+                                          {target.source === 'monthly' && (
+                                            <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                              Custom
+                                            </span>
+                                          )}
                                         </p>
                                       )}
                                     </div>
