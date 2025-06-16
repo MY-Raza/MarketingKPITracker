@@ -38,7 +38,7 @@ export default function Admin() {
   const queryClient = useQueryClient();
   const { syncWeeksData, syncKpisData, syncMonthlyTargets, syncSubcategoriesData } = useRealtimeSync();
   const [adminTab, setAdminTab] = useState<'kpis' | 'targets' | 'weeks' | 'subcategories'>('kpis');
-  const [selectedMonthId, setSelectedMonthId] = useState<string>('2025-05');
+  const [selectedMonthId, setSelectedMonthId] = useState<string>('');
 
   // Fetch CVJ stages with full hierarchy (working endpoint)
   const { data: cvjStages = [], isLoading: isLoadingStages } = useQuery({
@@ -80,12 +80,49 @@ export default function Admin() {
     stage.subCategories?.flatMap((sub: any) => sub.kpis || []) || []
   );
 
-  // Get unique months
-  const uniqueMonths = [
-    { id: '2025-05', name: 'May 2025', year: 2025, month: 5 },
-    { id: '2025-04', name: 'April 2025', year: 2025, month: 4 },
-    { id: '2025-03', name: 'March 2025', year: 2025, month: 3 }
-  ];
+  // Get unique months dynamically from weeks
+  const uniqueMonths = React.useMemo(() => {
+    if (!weeks || weeks.length === 0) return [];
+    
+    const monthSet = new Set<string>();
+    const monthsData: { id: string; name: string; year: number; month: number }[] = [];
+    
+    weeks.forEach(week => {
+      // Use actual start and end dates from week
+      const startDate = new Date(week.startDateString);
+      const endDate = new Date(week.endDateString);
+      
+      // Add months that the week touches
+      const startMonth = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}`;
+      const endMonth = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}`;
+      
+      [startMonth, endMonth].forEach(monthId => {
+        if (!monthSet.has(monthId)) {
+          monthSet.add(monthId);
+          const [year, month] = monthId.split('-').map(Number);
+          monthsData.push({
+            id: monthId,
+            name: getMonthName(year, month),
+            year,
+            month
+          });
+        }
+      });
+    });
+    
+    // Sort by year and month (most recent first)
+    return monthsData.sort((a, b) => {
+      if (a.year !== b.year) return b.year - a.year;
+      return b.month - a.month;
+    });
+  }, [weeks]);
+
+  // Auto-select the most recent month when uniqueMonths changes
+  React.useEffect(() => {
+    if (uniqueMonths.length > 0 && (!selectedMonthId || !uniqueMonths.find(m => m.id === selectedMonthId))) {
+      setSelectedMonthId(uniqueMonths[0].id);
+    }
+  }, [uniqueMonths, selectedMonthId]);
 
   const openKpiModal = useCallback((kpiToEdit?: KPI, subCategoryName?: string, cvjStageName?: CVJStageName) => {
     setEditingKpi(kpiToEdit);
@@ -1033,6 +1070,22 @@ interface MonthlyTargetFormProps {
 
 function MonthlyTargetForm({ initialData, onSubmit, onCancel, allKpis, allMonths }: MonthlyTargetFormProps) {
   const [formData, setFormData] = useState<MonthlyTargetFormData>(initialData);
+
+  // Update form data when initialData changes (when modal opens)
+  React.useEffect(() => {
+    setFormData(initialData);
+  }, [initialData]);
+
+  // Validate and update monthId when available months change
+  React.useEffect(() => {
+    if (allMonths.length > 0 && formData.monthId && !allMonths.find(m => m.id === formData.monthId)) {
+      // Current selected month is no longer available, reset to first available month
+      setFormData(prev => ({ ...prev, monthId: allMonths[0].id }));
+    } else if (allMonths.length > 0 && !formData.monthId) {
+      // No month selected, set to first available month
+      setFormData(prev => ({ ...prev, monthId: allMonths[0].id }));
+    }
+  }, [allMonths, formData.monthId]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
