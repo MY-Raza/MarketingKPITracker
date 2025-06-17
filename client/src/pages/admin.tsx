@@ -1194,6 +1194,7 @@ export default function Admin() {
             onSubmit={handleAddOrUpdateWeek}
             onCancel={() => setIsWeekModalOpen(false)}
             existingWeeks={weeks}
+            isLoading={updateLoadingStates.week}
           />
         </DialogContent>
       </Dialog>
@@ -1219,6 +1220,7 @@ export default function Admin() {
             onSubmit={handleSubcategoryFormSubmit}
             onCancel={() => setIsSubcategoryModalOpen(false)}
             cvjStages={cvjStages}
+            isLoading={updateLoadingStates.subcategory}
           />
         </DialogContent>
       </Dialog>
@@ -1246,7 +1248,7 @@ interface KpiFormProps {
   isLoading?: boolean;
 }
 
-function KpiForm({ initialData, onSubmit, onCancel, cvjStages }: KpiFormProps) {
+function KpiForm({ initialData, onSubmit, onCancel, cvjStages, isLoading = false }: KpiFormProps) {
   const [formData, setFormData] = useState<KpiFormData>(initialData);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -1363,9 +1365,10 @@ interface MonthlyTargetFormProps {
   onCancel: () => void;
   allKpis: KPI[];
   allMonths: { id: string; name: string; year: number; month: number }[];
+  isLoading?: boolean;
 }
 
-function MonthlyTargetForm({ initialData, onSubmit, onCancel, allKpis, allMonths }: MonthlyTargetFormProps) {
+function MonthlyTargetForm({ initialData, onSubmit, onCancel, allKpis, allMonths, isLoading = false }: MonthlyTargetFormProps) {
   const [formData, setFormData] = useState<MonthlyTargetFormData>(initialData);
 
   // Update form data when initialData changes (when modal opens)
@@ -1458,9 +1461,10 @@ interface WeekFormProps {
   onSubmit: (data: WeekFormData) => void;
   onCancel: () => void;
   existingWeeks: Week[];
+  isLoading?: boolean;
 }
 
-function WeekForm({ initialData, onSubmit, onCancel, existingWeeks }: WeekFormProps) {
+function WeekForm({ initialData, onSubmit, onCancel, existingWeeks, isLoading = false }: WeekFormProps) {
   const [formData, setFormData] = useState<WeekFormData>({
     ...initialData
   });

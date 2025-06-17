@@ -14,6 +14,7 @@ interface SubcategoryFormProps {
   onSubmit: (data: any) => void;
   onCancel: () => void;
   cvjStages: any[];
+  isLoading?: boolean;
 }
 
 export function SubcategoryForm({ initialData, onSubmit, onCancel, cvjStages }: SubcategoryFormProps) {
