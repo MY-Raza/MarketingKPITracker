@@ -93,6 +93,19 @@ export default function Admin() {
     isLoading: false
   });
 
+  // Loading states for update operations
+  const [updateLoadingStates, setUpdateLoadingStates] = useState<{
+    kpi: boolean;
+    monthlyTarget: boolean;
+    week: boolean;
+    subcategory: boolean;
+  }>({
+    kpi: false,
+    monthlyTarget: false,
+    week: false,
+    subcategory: false
+  });
+
   // Get all KPIs from the hierarchy
   const allKpis = cvjStages.flatMap((stage: any) => 
     stage.subCategories?.flatMap((sub: any) => sub.kpis || []) || []
@@ -208,20 +221,46 @@ export default function Admin() {
 
   // KPI mutations using authenticated API client
   const createKpiMutation = useMutation({
-    mutationFn: (kpiData: any) => apiClient.createKpi(kpiData),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages-hierarchy'] });
-      setIsKpiModalOpen(false);
-      setEditingKpi(undefined);
+    mutationFn: (kpiData: any) => {
+      setUpdateLoadingStates(prev => ({ ...prev, kpi: true }));
+      return apiClient.createKpi(kpiData);
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages-hierarchy'] }),
+        queryClient.refetchQueries({ queryKey: ['/api/cvj-stages-hierarchy'] })
+      ]);
+      
+      setTimeout(() => {
+        setUpdateLoadingStates(prev => ({ ...prev, kpi: false }));
+        setIsKpiModalOpen(false);
+        setEditingKpi(undefined);
+      }, 300);
+    },
+    onError: () => {
+      setUpdateLoadingStates(prev => ({ ...prev, kpi: false }));
     }
   });
 
   const updateKpiMutation = useMutation({
-    mutationFn: ({ id, ...kpiData }: any) => apiClient.updateKpi(id, kpiData),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages-hierarchy'] });
-      setIsKpiModalOpen(false);
-      setEditingKpi(undefined);
+    mutationFn: ({ id, ...kpiData }: any) => {
+      setUpdateLoadingStates(prev => ({ ...prev, kpi: true }));
+      return apiClient.updateKpi(id, kpiData);
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages-hierarchy'] }),
+        queryClient.refetchQueries({ queryKey: ['/api/cvj-stages-hierarchy'] })
+      ]);
+      
+      setTimeout(() => {
+        setUpdateLoadingStates(prev => ({ ...prev, kpi: false }));
+        setIsKpiModalOpen(false);
+        setEditingKpi(undefined);
+      }, 300);
+    },
+    onError: () => {
+      setUpdateLoadingStates(prev => ({ ...prev, kpi: false }));
     }
   });
 
@@ -300,20 +339,46 @@ export default function Admin() {
 
   // Monthly targets mutations using authenticated API client
   const createMonthlyTargetMutation = useMutation({
-    mutationFn: (targetData: any) => apiClient.createMonthlyTarget(targetData),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/monthly-targets'] });
-      setIsMonthlyTargetModalOpen(false);
-      setEditingMonthlyTarget(undefined);
+    mutationFn: (targetData: any) => {
+      setUpdateLoadingStates(prev => ({ ...prev, monthlyTarget: true }));
+      return apiClient.createMonthlyTarget(targetData);
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['/api/monthly-targets'] }),
+        queryClient.refetchQueries({ queryKey: ['/api/monthly-targets'] })
+      ]);
+      
+      setTimeout(() => {
+        setUpdateLoadingStates(prev => ({ ...prev, monthlyTarget: false }));
+        setIsMonthlyTargetModalOpen(false);
+        setEditingMonthlyTarget(undefined);
+      }, 300);
+    },
+    onError: () => {
+      setUpdateLoadingStates(prev => ({ ...prev, monthlyTarget: false }));
     }
   });
 
   const updateMonthlyTargetMutation = useMutation({
-    mutationFn: ({ id, ...targetData }: any) => apiClient.updateMonthlyTarget(id, targetData),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/monthly-targets'] });
-      setIsMonthlyTargetModalOpen(false);
-      setEditingMonthlyTarget(undefined);
+    mutationFn: ({ id, ...targetData }: any) => {
+      setUpdateLoadingStates(prev => ({ ...prev, monthlyTarget: true }));
+      return apiClient.updateMonthlyTarget(id, targetData);
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['/api/monthly-targets'] }),
+        queryClient.refetchQueries({ queryKey: ['/api/monthly-targets'] })
+      ]);
+      
+      setTimeout(() => {
+        setUpdateLoadingStates(prev => ({ ...prev, monthlyTarget: false }));
+        setIsMonthlyTargetModalOpen(false);
+        setEditingMonthlyTarget(undefined);
+      }, 300);
+    },
+    onError: () => {
+      setUpdateLoadingStates(prev => ({ ...prev, monthlyTarget: false }));
     }
   });
 
@@ -377,15 +442,25 @@ export default function Admin() {
 
   // Week mutations using authenticated API client
   const createWeekMutation = useMutation({
-    mutationFn: (weekData: any) => apiClient.createWeek(weekData),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/weeks'] });
-      setIsWeekModalOpen(false);
-      setEditingWeek(undefined);
+    mutationFn: (weekData: any) => {
+      setUpdateLoadingStates(prev => ({ ...prev, week: true }));
+      return apiClient.createWeek(weekData);
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['/api/weeks'] }),
+        queryClient.refetchQueries({ queryKey: ['/api/weeks'] })
+      ]);
+      
+      setTimeout(() => {
+        setUpdateLoadingStates(prev => ({ ...prev, week: false }));
+        setIsWeekModalOpen(false);
+        setEditingWeek(undefined);
+      }, 300);
     },
     onError: (error: any) => {
       console.error('Week creation failed:', error);
-      // Display the server error message
+      setUpdateLoadingStates(prev => ({ ...prev, week: false }));
       const errorMessage = error?.response?.data?.message || error?.message || 'Failed to create week';
       alert(errorMessage);
     }
@@ -395,16 +470,25 @@ export default function Admin() {
     mutationFn: ({ id, ...weekData }: any) => {
       console.log('Frontend: Updating week with ID:', id);
       console.log('Frontend: Week data:', weekData);
+      setUpdateLoadingStates(prev => ({ ...prev, week: true }));
       return apiClient.updateWeek(id, weekData);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       console.log('Frontend: Week update successful');
-      queryClient.invalidateQueries({ queryKey: ['/api/weeks'] });
-      setIsWeekModalOpen(false);
-      setEditingWeek(undefined);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['/api/weeks'] }),
+        queryClient.refetchQueries({ queryKey: ['/api/weeks'] })
+      ]);
+      
+      setTimeout(() => {
+        setUpdateLoadingStates(prev => ({ ...prev, week: false }));
+        setIsWeekModalOpen(false);
+        setEditingWeek(undefined);
+      }, 300);
     },
     onError: (error: any) => {
       console.error('Frontend: Week update failed:', error);
+      setUpdateLoadingStates(prev => ({ ...prev, week: false }));
       const errorMessage = error?.response?.data?.message || error?.message || 'Failed to update week';
       alert(errorMessage);
     }
@@ -485,16 +569,25 @@ export default function Admin() {
   const createSubcategoryMutation = useMutation({
     mutationFn: (data: any) => {
       console.log('Frontend: Creating subcategory with data:', data);
+      setUpdateLoadingStates(prev => ({ ...prev, subcategory: true }));
       return apiClient.createSubcategory(data);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       console.log('Frontend: Subcategory creation successful');
-      queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages-hierarchy'] });
-      setIsSubcategoryModalOpen(false);
-      setEditingSubcategory(undefined);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages-hierarchy'] }),
+        queryClient.refetchQueries({ queryKey: ['/api/cvj-stages-hierarchy'] })
+      ]);
+      
+      setTimeout(() => {
+        setUpdateLoadingStates(prev => ({ ...prev, subcategory: false }));
+        setIsSubcategoryModalOpen(false);
+        setEditingSubcategory(undefined);
+      }, 300);
     },
     onError: (error: any) => {
       console.error('Frontend: Subcategory creation failed:', error);
+      setUpdateLoadingStates(prev => ({ ...prev, subcategory: false }));
       const errorMessage = error?.response?.data?.message || error?.message || 'Failed to create subcategory';
       alert(errorMessage);
     }
@@ -504,16 +597,25 @@ export default function Admin() {
     mutationFn: ({ id, ...data }: any) => {
       console.log('Frontend: Updating subcategory with ID:', id);
       console.log('Frontend: Subcategory data:', data);
+      setUpdateLoadingStates(prev => ({ ...prev, subcategory: true }));
       return apiClient.updateSubcategory(id, data);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       console.log('Frontend: Subcategory update successful');
-      queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages-hierarchy'] });
-      setIsSubcategoryModalOpen(false);
-      setEditingSubcategory(undefined);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages-hierarchy'] }),
+        queryClient.refetchQueries({ queryKey: ['/api/cvj-stages-hierarchy'] })
+      ]);
+      
+      setTimeout(() => {
+        setUpdateLoadingStates(prev => ({ ...prev, subcategory: false }));
+        setIsSubcategoryModalOpen(false);
+        setEditingSubcategory(undefined);
+      }, 300);
     },
     onError: (error: any) => {
       console.error('Frontend: Subcategory update failed:', error);
+      setUpdateLoadingStates(prev => ({ ...prev, subcategory: false }));
       const errorMessage = error?.response?.data?.message || error?.message || 'Failed to update subcategory';
       alert(errorMessage);
     }
@@ -1039,6 +1141,7 @@ export default function Admin() {
             onSubmit={handleKpiFormSubmit}
             onCancel={() => setIsKpiModalOpen(false)}
             cvjStages={cvjStages}
+            isLoading={updateLoadingStates.kpi}
           />
         </DialogContent>
       </Dialog>
@@ -1065,6 +1168,7 @@ export default function Admin() {
             onCancel={() => setIsMonthlyTargetModalOpen(false)}
             allKpis={allKpis}
             allMonths={uniqueMonths}
+            isLoading={updateLoadingStates.monthlyTarget}
           />
         </DialogContent>
       </Dialog>
@@ -1139,6 +1243,7 @@ interface KpiFormProps {
   onSubmit: (data: KpiFormData) => void;
   onCancel: () => void;
   cvjStages: CVJStage[];
+  isLoading?: boolean;
 }
 
 function KpiForm({ initialData, onSubmit, onCancel, cvjStages }: KpiFormProps) {
