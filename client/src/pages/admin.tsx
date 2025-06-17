@@ -25,6 +25,7 @@ import {
 } from '../types/kpi';
 import { createWeekObjectFromFormData } from '../constants/kpi';
 import { useRealtimeSync } from '../hooks/use-realtime-sync';
+import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 
 // Helper functions
 const generateId = (): string => `id_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -75,10 +76,84 @@ export default function Admin() {
   const [defaultCvjStageName, setDefaultCvjStageName] = useState<CVJStageName>(CVJStageName.AWARE);
   const [selectedStageForSubcategory, setSelectedStageForSubcategory] = useState<string>('');
 
+  // Confirmation dialog states
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    details: string[];
+    onConfirm: () => void;
+    isLoading: boolean;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    details: [],
+    onConfirm: () => {},
+    isLoading: false
+  });
+
   // Get all KPIs from the hierarchy
   const allKpis = cvjStages.flatMap((stage: any) => 
     stage.subCategories?.flatMap((sub: any) => sub.kpis || []) || []
   );
+
+  // Helper functions for generating confirmation dialog details
+  const getKpiDeletionDetails = (kpiId: string): string[] => {
+    const details: string[] = [];
+    
+    // Check for monthly targets
+    const relatedTargets = monthlyTargets.filter(target => target.kpiId === kpiId);
+    if (relatedTargets.length > 0) {
+      details.push(`Delete ${relatedTargets.length} monthly target${relatedTargets.length > 1 ? 's' : ''}`);
+    }
+    
+    // Note: Weekly data entries are handled by cascade delete in the database
+    details.push('Remove all associated weekly data entries');
+    
+    return details;
+  };
+
+  const getWeekDeletionDetails = (weekId: string): string[] => {
+    const details: string[] = [];
+    
+    // Check for weekly data entries (this would need to be fetched from API in real implementation)
+    details.push('Delete all data entries for this week period');
+    details.push('Update month availability in monthly targets section');
+    
+    return details;
+  };
+
+  const getSubcategoryDeletionDetails = (subcategoryId: string): string[] => {
+    const details: string[] = [];
+    
+    // Find subcategory and its KPIs
+    const subcategory = cvjStages
+      .flatMap(stage => stage.subCategories || [])
+      .find(sub => sub.id === subcategoryId);
+    
+    if (subcategory) {
+      const kpiCount = subcategory.kpis?.length || 0;
+      if (kpiCount > 0) {
+        details.push(`Delete ${kpiCount} KPI${kpiCount > 1 ? 's' : ''} in this subcategory`);
+        details.push('Remove all associated monthly targets and weekly data');
+      }
+    }
+    
+    return details;
+  };
+
+  const getMonthlyTargetDeletionDetails = (target: MonthlyKpiTarget): string[] => {
+    const kpi = allKpis.find(k => k.id === target.kpiId);
+    const details: string[] = [];
+    
+    if (kpi) {
+      details.push(`Remove custom target for "${kpi.name}"`);
+      details.push('Data entry will fall back to default target value');
+    }
+    
+    return details;
+  };
 
   // Get unique months dynamically from weeks
   const uniqueMonths = React.useMemo(() => {
@@ -153,7 +228,11 @@ export default function Admin() {
   const deleteKpiMutation = useMutation({
     mutationFn: (kpiId: string) => apiClient.deleteKpi(kpiId),
     onSuccess: () => {
+      setConfirmDialog(prev => ({ ...prev, isLoading: false, isOpen: false }));
       queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages-hierarchy'] });
+    },
+    onError: () => {
+      setConfirmDialog(prev => ({ ...prev, isLoading: false }));
     }
   });
 
@@ -189,8 +268,22 @@ export default function Admin() {
   }, [cvjStages, createKpiMutation, updateKpiMutation]);
 
   const handleDeleteKpi = useCallback((kpiId: string) => {
-    deleteKpiMutation.mutate(kpiId);
-  }, [deleteKpiMutation]);
+    const kpi = allKpis.find(k => k.id === kpiId);
+    const kpiName = kpi?.name || 'KPI';
+    const details = getKpiDeletionDetails(kpiId);
+    
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Delete KPI',
+      message: `Are you sure you want to delete "${kpiName}"? This action cannot be undone.`,
+      details,
+      onConfirm: () => {
+        setConfirmDialog(prev => ({ ...prev, isLoading: true }));
+        deleteKpiMutation.mutate(kpiId);
+      },
+      isLoading: false
+    });
+  }, [deleteKpiMutation, allKpis, getKpiDeletionDetails]);
 
   const openMonthlyTargetModal = useCallback((targetToEdit?: MonthlyKpiTarget) => {
     setEditingMonthlyTarget(targetToEdit);
@@ -219,7 +312,11 @@ export default function Admin() {
   const deleteMonthlyTargetMutation = useMutation({
     mutationFn: (targetId: string) => apiClient.deleteMonthlyTarget(targetId),
     onSuccess: () => {
+      setConfirmDialog(prev => ({ ...prev, isLoading: false, isOpen: false }));
       queryClient.invalidateQueries({ queryKey: ['/api/monthly-targets'] });
+    },
+    onError: () => {
+      setConfirmDialog(prev => ({ ...prev, isLoading: false }));
     }
   });
 
@@ -238,8 +335,24 @@ export default function Admin() {
   }, [createMonthlyTargetMutation, updateMonthlyTargetMutation]);
 
   const handleDeleteMonthlyTarget = useCallback((targetId: string) => {
-    deleteMonthlyTargetMutation.mutate(targetId);
-  }, [deleteMonthlyTargetMutation]);
+    const target = monthlyTargets.find(t => t.id === targetId);
+    if (!target) return;
+    
+    const details = getMonthlyTargetDeletionDetails(target);
+    const monthName = uniqueMonths.find(m => m.id === target.monthId)?.name || target.monthId;
+    
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Delete Monthly Target',
+      message: `Are you sure you want to delete the monthly target for ${monthName}? This action cannot be undone.`,
+      details,
+      onConfirm: () => {
+        setConfirmDialog(prev => ({ ...prev, isLoading: true }));
+        deleteMonthlyTargetMutation.mutate(targetId);
+      },
+      isLoading: false
+    });
+  }, [deleteMonthlyTargetMutation, monthlyTargets, getMonthlyTargetDeletionDetails, uniqueMonths]);
 
   const openWeekModal = useCallback((weekToEdit?: Week) => {
     setEditingWeek(weekToEdit);
