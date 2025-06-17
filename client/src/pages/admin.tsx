@@ -227,9 +227,17 @@ export default function Admin() {
 
   const deleteKpiMutation = useMutation({
     mutationFn: (kpiId: string) => apiClient.deleteKpi(kpiId),
-    onSuccess: () => {
-      setConfirmDialog(prev => ({ ...prev, isLoading: false, isOpen: false }));
-      queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages-hierarchy'] });
+    onSuccess: async () => {
+      // Wait for all related queries to refetch before closing dialog
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages-hierarchy'] }),
+        queryClient.invalidateQueries({ queryKey: ['/api/monthly-targets'] })
+      ]);
+      
+      // Add a small delay to ensure UI updates are complete
+      setTimeout(() => {
+        setConfirmDialog(prev => ({ ...prev, isLoading: false, isOpen: false }));
+      }, 500);
     },
     onError: () => {
       setConfirmDialog(prev => ({ ...prev, isLoading: false }));
@@ -311,9 +319,17 @@ export default function Admin() {
 
   const deleteMonthlyTargetMutation = useMutation({
     mutationFn: (targetId: string) => apiClient.deleteMonthlyTarget(targetId),
-    onSuccess: () => {
-      setConfirmDialog(prev => ({ ...prev, isLoading: false, isOpen: false }));
-      queryClient.invalidateQueries({ queryKey: ['/api/monthly-targets'] });
+    onSuccess: async () => {
+      // Wait for all related queries to refetch before closing dialog
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['/api/monthly-targets'] }),
+        queryClient.refetchQueries({ queryKey: ['/api/monthly-targets'] })
+      ]);
+      
+      // Add delay to ensure UI updates are complete
+      setTimeout(() => {
+        setConfirmDialog(prev => ({ ...prev, isLoading: false, isOpen: false }));
+      }, 500);
     },
     onError: () => {
       setConfirmDialog(prev => ({ ...prev, isLoading: false }));
@@ -401,11 +417,20 @@ export default function Admin() {
       console.log('Frontend: Delete request completed', result);
       return result;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       console.log('Frontend: Delete mutation successful, invalidating queries');
-      setConfirmDialog(prev => ({ ...prev, isLoading: false, isOpen: false }));
-      queryClient.invalidateQueries({ queryKey: ['/api/weeks'] });
-      queryClient.refetchQueries({ queryKey: ['/api/weeks'] });
+      // Wait for all related queries to refetch before closing dialog
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['/api/weeks'] }),
+        queryClient.refetchQueries({ queryKey: ['/api/weeks'] }),
+        queryClient.invalidateQueries({ queryKey: ['/api/weekly-data'] }),
+        queryClient.refetchQueries({ queryKey: ['/api/weekly-data'] })
+      ]);
+      
+      // Add delay to ensure UI updates are complete
+      setTimeout(() => {
+        setConfirmDialog(prev => ({ ...prev, isLoading: false, isOpen: false }));
+      }, 500);
     },
     onError: (error) => {
       console.error('Frontend: Delete mutation failed', error);
@@ -499,10 +524,20 @@ export default function Admin() {
       console.log('Frontend: Deleting subcategory with ID:', id);
       return apiClient.deleteSubcategory(id);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       console.log('Frontend: Subcategory deletion successful');
-      setConfirmDialog(prev => ({ ...prev, isLoading: false, isOpen: false }));
-      queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages-hierarchy'] });
+      // Wait for all related queries to refetch before closing dialog
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages-hierarchy'] }),
+        queryClient.refetchQueries({ queryKey: ['/api/cvj-stages-hierarchy'] }),
+        queryClient.invalidateQueries({ queryKey: ['/api/monthly-targets'] }),
+        queryClient.refetchQueries({ queryKey: ['/api/monthly-targets'] })
+      ]);
+      
+      // Add delay to ensure UI updates are complete
+      setTimeout(() => {
+        setConfirmDialog(prev => ({ ...prev, isLoading: false, isOpen: false }));
+      }, 500);
     },
     onError: (error: any) => {
       console.error('Frontend: Subcategory deletion failed:', error);
