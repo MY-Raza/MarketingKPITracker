@@ -403,11 +403,13 @@ export default function Admin() {
     },
     onSuccess: () => {
       console.log('Frontend: Delete mutation successful, invalidating queries');
+      setConfirmDialog(prev => ({ ...prev, isLoading: false, isOpen: false }));
       queryClient.invalidateQueries({ queryKey: ['/api/weeks'] });
       queryClient.refetchQueries({ queryKey: ['/api/weeks'] });
     },
     onError: (error) => {
       console.error('Frontend: Delete mutation failed', error);
+      setConfirmDialog(prev => ({ ...prev, isLoading: false }));
     }
   });
 
@@ -430,8 +432,22 @@ export default function Admin() {
   }, [createWeekMutation, updateWeekMutation]);
 
   const handleDeleteWeek = useCallback((weekId: string) => {
-    deleteWeekMutation.mutate(weekId);
-  }, [deleteWeekMutation]);
+    const week = weeks.find(w => w.id === weekId);
+    const weekName = week?.displayName || week?.id || 'Week';
+    const details = getWeekDeletionDetails(weekId);
+    
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Delete Week',
+      message: `Are you sure you want to delete "${weekName}"? This action cannot be undone.`,
+      details,
+      onConfirm: () => {
+        setConfirmDialog(prev => ({ ...prev, isLoading: true }));
+        deleteWeekMutation.mutate(weekId);
+      },
+      isLoading: false
+    });
+  }, [deleteWeekMutation, weeks, getWeekDeletionDetails]);
 
   // Subcategory handlers
   const openSubcategoryModal = useCallback((subcategory?: any, stageId?: string) => {
@@ -485,12 +501,12 @@ export default function Admin() {
     },
     onSuccess: () => {
       console.log('Frontend: Subcategory deletion successful');
+      setConfirmDialog(prev => ({ ...prev, isLoading: false, isOpen: false }));
       queryClient.invalidateQueries({ queryKey: ['/api/cvj-stages-hierarchy'] });
     },
     onError: (error: any) => {
       console.error('Frontend: Subcategory deletion failed:', error);
-      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to delete subcategory';
-      alert(errorMessage);
+      setConfirmDialog(prev => ({ ...prev, isLoading: false }));
     }
   });
 
@@ -503,8 +519,25 @@ export default function Admin() {
   }, [editingSubcategory, createSubcategoryMutation, updateSubcategoryMutation]);
 
   const handleDeleteSubcategory = useCallback((subcategoryId: string) => {
-    deleteSubcategoryMutation.mutate(subcategoryId);
-  }, [deleteSubcategoryMutation]);
+    const subcategory = cvjStages
+      .flatMap(stage => stage.subCategories || [])
+      .find(sub => sub.id === subcategoryId);
+    
+    const subcategoryName = subcategory?.name || 'Subcategory';
+    const details = getSubcategoryDeletionDetails(subcategoryId);
+    
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Delete Subcategory',
+      message: `Are you sure you want to delete "${subcategoryName}"? This action cannot be undone.`,
+      details,
+      onConfirm: () => {
+        setConfirmDialog(prev => ({ ...prev, isLoading: true }));
+        deleteSubcategoryMutation.mutate(subcategoryId);
+      },
+      isLoading: false
+    });
+  }, [deleteSubcategoryMutation, cvjStages, getSubcategoryDeletionDetails]);
 
   const filteredTargets = monthlyTargets.filter(target => target.monthId === selectedMonthId);
 
@@ -1050,6 +1083,17 @@ export default function Admin() {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmDialog.onConfirm}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        details={confirmDialog.details}
+        isLoading={confirmDialog.isLoading}
+      />
     </div>
   );
 }
