@@ -17,7 +17,7 @@ interface SubcategoryFormProps {
   isLoading?: boolean;
 }
 
-export function SubcategoryForm({ initialData, onSubmit, onCancel, cvjStages }: SubcategoryFormProps) {
+export function SubcategoryForm({ initialData, onSubmit, onCancel, cvjStages, isLoading = false }: SubcategoryFormProps) {
   const [formData, setFormData] = useState(initialData);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
@@ -114,10 +114,10 @@ export function SubcategoryForm({ initialData, onSubmit, onCancel, cvjStages }: 
       </div>
 
       <div className="flex space-x-2 pt-4">
-        <Button type="submit" className="flex-1">
-          {initialData.id ? 'Update Subcategory' : 'Add Subcategory'}
+        <Button type="submit" className="flex-1" disabled={isLoading}>
+          {isLoading ? 'Processing...' : (initialData.id ? 'Update Subcategory' : 'Add Subcategory')}
         </Button>
-        <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
+        <Button type="button" variant="outline" onClick={onCancel} className="flex-1" disabled={isLoading}>
           Cancel
         </Button>
       </div>

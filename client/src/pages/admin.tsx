@@ -1348,10 +1348,10 @@ function KpiForm({ initialData, onSubmit, onCancel, cvjStages, isLoading = false
       </div>
 
       <div className="flex space-x-2 pt-4">
-        <Button type="submit" className="flex-1">
-          {initialData.id ? 'Update KPI' : 'Add KPI'}
+        <Button type="submit" className="flex-1" disabled={isLoading}>
+          {isLoading ? 'Processing...' : (initialData.id ? 'Update KPI' : 'Add KPI')}
         </Button>
-        <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
+        <Button type="button" variant="outline" onClick={onCancel} className="flex-1" disabled={isLoading}>
           Cancel
         </Button>
       </div>
@@ -1445,10 +1445,10 @@ function MonthlyTargetForm({ initialData, onSubmit, onCancel, allKpis, allMonths
       </div>
 
       <div className="flex space-x-2 pt-4">
-        <Button type="submit" className="flex-1">
-          {initialData.id ? 'Update Target' : 'Add Target'}
+        <Button type="submit" className="flex-1" disabled={isLoading}>
+          {isLoading ? 'Processing...' : (initialData.id ? 'Update Target' : 'Add Target')}
         </Button>
-        <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
+        <Button type="button" variant="outline" onClick={onCancel} className="flex-1" disabled={isLoading}>
           Cancel
         </Button>
       </div>
@@ -1579,10 +1579,10 @@ function WeekForm({ initialData, onSubmit, onCancel, existingWeeks, isLoading = 
       </div>
 
       <div className="flex space-x-2 pt-4">
-        <Button type="submit" className="flex-1">
-          {initialData.originalId ? 'Update Week' : 'Add Week'}
+        <Button type="submit" className="flex-1" disabled={isLoading}>
+          {isLoading ? 'Processing...' : (initialData.originalId ? 'Update Week' : 'Add Week')}
         </Button>
-        <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
+        <Button type="button" variant="outline" onClick={onCancel} className="flex-1" disabled={isLoading}>
           Cancel
         </Button>
       </div>
